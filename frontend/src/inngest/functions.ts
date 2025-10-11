@@ -15,6 +15,7 @@ export const processVideo = inngest.createFunction(
   async ({ event, step }) => {
     const { uploadedFileId } = event.data;
 
+    // step 1 Check Credits
     const { userId, credits, s3_key } = await step.run("check-credits", async () => {
       const uploadedFile = await db.uploadedFile.findUniqueOrThrow({
         where: {
@@ -38,7 +39,7 @@ export const processVideo = inngest.createFunction(
     });
     const s3Key: string = s3_key as string;
     
-
+    // step 2 set Status to Processing
     if(credits > 0){
       await step.run("set-status-processing", async () =>{
         await db.uploadedFile.update({
@@ -63,7 +64,7 @@ export const processVideo = inngest.createFunction(
       })
 
       const { clipsFound } = await step.run("create-slips-in-db", async () =>{
-        const folderPrefix = s3Key.split(".")[0]!;
+        const folderPrefix = s3Key.split("/")[0]!;
 
         const allKeys = await listS3ObjectsByPrefix(folderPrefix);
 

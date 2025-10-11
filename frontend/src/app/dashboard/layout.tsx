@@ -1,10 +1,13 @@
-import { getSession } from 'next-auth/react'
+
 import { redirect } from 'next/navigation'
 import React from 'react'
+import NavHeader from '~/components/navHeader'
 import { db } from '~/server/db'
+import { auth} from "~/server/auth/index";
+import { Toaster } from '~/components/ui/sonner';
 
 const layout = async ({children}:{children: React.ReactNode}) => {
-    const session = await getSession();
+    const session = await auth();
 
     if(!session?.user?.id){
         redirect("/login")
@@ -14,9 +17,10 @@ const layout = async ({children}:{children: React.ReactNode}) => {
         select: {credits:true , email:true}
     })
   return (
-    <div>
+    <div className='flex min-h-screen flex-col'>
       <NavHeader credits={user.credits} email={user.email} />
       <main className='container mx-auto flex-1 py-6' >{children}</main>
+      <Toaster/>
     </div>
   )
 }
