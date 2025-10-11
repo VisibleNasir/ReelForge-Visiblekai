@@ -4,8 +4,8 @@
 import { hashPassword } from "~/lib/auth";
 import { signupSchema } from "~/schemas/auth";
 import { db } from "~/server/db";
-import Stripe from "stripe";
-import { env } from "~/env";
+// import Stripe from "stripe";
+// import { env } from "~/env";
 
 type SignupResult = {
   success: boolean;

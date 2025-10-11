@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+
 import { redirect } from 'next/navigation';
 import React from 'react'
 import DashboardClient from '~/components/DashboardClient';
