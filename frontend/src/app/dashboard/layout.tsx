@@ -18,10 +18,15 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const user = await db.user.findUniqueOrThrow({
+  const user = await db.user.findUnique({
     where: { id: session.user.id },
     select: { credits: true, email: true },
   });
+
+  if (!user) {
+    // User session exists but user record doesn't - redirect to signup
+    redirect("/signup");
+  }
 
   return (
     <div className="flex min-h-screen flex-col">

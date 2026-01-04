@@ -12,18 +12,22 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const userData = await db.user.findUniqueOrThrow({
+  const userData = await db.user.findUnique({
     where: { id: session.user.id },
     select: {
       uploadedFiles: {
         where: {
-          uploaded: true,
+          // Show all uploaded files, regardless of upload status
+        },
+        orderBy: {
+          createdAt: "desc",
         },
         select: {
           id: true,
           s3Key: true,
           displayName: true,
           status: true,
+          uploaded: true,
           createdAt: true,
           _count: {
             select: {
@@ -40,10 +44,14 @@ export default async function DashboardPage() {
     },
   });
 
+  if (!userData) {
+    redirect("/login");
+  }
+
   const formattedFiles = userData.uploadedFiles.map((file) => ({
     id: file.id,
     s3Key: file.s3Key,
-    filename: file.displayName ?? "Unkown filename",
+    filename: file.displayName ?? "Unknown filename",
     status: file.status,
     clipsCount: file._count.clips,
     createdAt: file.createdAt,

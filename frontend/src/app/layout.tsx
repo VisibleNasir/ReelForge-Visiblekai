@@ -4,9 +4,9 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
 export const metadata: Metadata = {
-  title: "Podcast Clipper",
-  description: "Podcast Clipper",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  title: "ReelForge - Podcast Clipper",
+  description: "Create reels from your podcast episodes with AI",
+  icons: [{ rel: "icon", url: "/logo.png" }],
 };
 
 const geist = Geist({
