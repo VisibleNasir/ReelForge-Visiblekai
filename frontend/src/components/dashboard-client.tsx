@@ -107,10 +107,10 @@ export function DashboardClient({
         description: "Your clips will appear shortly. We'll refresh automatically.",
         duration: 6000,
       });
-    } catch (error) {
+    } catch (err) {
       toast.error("Upload failed", {
         description:
-          error instanceof Error ? error.message : "An unexpected error occurred.",
+          err instanceof Error ? err.message : "An unexpected error occurred.",
       });
     } finally {
       setUploading(false);

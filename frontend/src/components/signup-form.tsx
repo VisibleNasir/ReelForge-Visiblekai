@@ -59,7 +59,7 @@ export function SignupForm({
       } else {
         router.push("/dashboard");
       }
-    } catch (error) {
+    } catch {
       setError("An unexpected error occured");
     } finally {
       setIsSubmitting(false);

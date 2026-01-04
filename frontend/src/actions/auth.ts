@@ -40,7 +40,7 @@ export async function signUp(data: SignupFormValues): Promise<SignupResult> {
     });
 
     return { success: true };
-  } catch (error) {
+  } catch {
     return { success: false, error: "An error occured during signup" };
   }
 }
