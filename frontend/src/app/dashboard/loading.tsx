@@ -1,11 +1,10 @@
-import React from 'react'
+import { Loader2 } from "lucide-react";
 
-const loading = () => {
+export default function Loading() {
   return (
-    <div className='flex items-center justify-center p-12'>
-      <h1>Loading the visible Red Carpet...</h1>
+    <div className="flex flex-col items-center justify-center gap-5 p-12">
+      <Loader2 className="text-muted-foreground h-10 w-10 animate-spin" />
+      <span className="ml-3 text-lg">Loading dashboard...</span>
     </div>
-  )
+  );
 }
-
-export default loading

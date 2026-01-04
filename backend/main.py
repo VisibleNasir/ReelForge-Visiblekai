@@ -32,30 +32,43 @@ class BurnSubtitlesRequest(BaseModel):
     s3_key: str
 
 
-image = (modal.Image.from_registry(
-    "nvidia/cuda:12.4.0-devel-ubuntu22.04", add_python="3.12")
-    .apt_install(["ffmpeg", "libgl1-mesa-glx", "wget", "libcudnn8", "libcudnn8-dev"])
+image = (
+    modal.Image.from_registry(
+        "nvidia/cuda:12.4.0-devel-ubuntu22.04", add_python="3.12"
+    )
+    .apt_install(["ffmpeg", "libgl1-mesa-glx", "wget", "libcudnn8", "libcudnn8-dev", "libglib2.0-0"])
+    .pip_install(
+        "torch==2.4.1",
+        "torchaudio==2.4.1",
+        "torchvision==0.19.1",
+        index_url="https://download.pytorch.org/whl/cu124",
+    )
+    .pip_install("opencv-python-headless==4.10.0.84")
     .pip_install_from_requirements("requirements.txt")
-    .run_commands(["mkdir -p /usr/share/fonts/truetype/custom",
-                   "wget -O /usr/share/fonts/truetype/custom/Anton-Regular.ttf https://github.com/google/fonts/raw/main/ofl/anton/Anton-Regular.ttf",
-                   "fc-cache -f -v"])
-    .add_local_dir("asd", "/asd", copy=True))
-
-app = modal.App("ai-podcast-clipper", image=image)
+    .run_commands([
+        "mkdir -p /usr/share/fonts/truetype/custom",
+        "wget -O /usr/share/fonts/truetype/custom/Anton-Regular.ttf https://github.com/google/fonts/raw/main/ofl/anton/Anton-Regular.ttf",
+        "fc-cache -f -v",
+    ])
+    .add_local_dir("asd", "/asd", copy=True, ignore=[".git/**"])
+)
+app = modal.App("reelfoege-podcast-clipper", image=image)
 
 volume = modal.Volume.from_name(
-    "ai-podcast-clipper-modal-cache", create_if_missing=True
+    "reelfoege-podcast-clipper-modal-cache", create_if_missing=True
 )
 mount_path = "/root/.cache/torch"
 
 auth_scheme = HTTPBearer()
 
 # S3 bucket name (use env var to avoid hardcoding and accidental typos/spaces)
-_S3_BUCKET_RAW = os.environ.get("S3_BUCKET", "visible-podcast-clipper")
+_S3_BUCKET_RAW = os.environ.get("S3_BUCKET", "reelforge-podcast-clipper")
 
 
 def _normalize_and_validate_bucket(bucket_raw: str) -> str:
     if bucket_raw is None:
+
+    
         raise ValueError("S3_BUCKET is not set")
     bucket = bucket_raw.strip()
     if not re.match(r'^[a-zA-Z0-9.\-_]{1,255}$', bucket):
@@ -74,7 +87,7 @@ except ValueError as e:
 def create_vertical_video(tracks, scores, pyframes_path, pyavi_path, audio_path, output_path, framerate=25):
     target_width = 1080
     target_height = 1920
-
+    # Get list of frames
     flist = glob.glob(os.path.join(pyframes_path, "*.jpg"))
     flist.sort()
     print(f"Found {len(flist)} frames in {pyframes_path}")
@@ -95,6 +108,7 @@ def create_vertical_video(tracks, scores, pyframes_path, pyavi_path, audio_path,
         print(f"Failed to probe audio duration: {e}")
         audio_duration = 0
 
+    # Prepare face data per frame
     faces = [[] for _ in range(len(flist))]
     for tidx, track in enumerate(tracks):
         score_array = scores[tidx]
@@ -108,13 +122,14 @@ def create_vertical_video(tracks, scores, pyframes_path, pyavi_path, audio_path,
             score_slice = score_array[slice_start:slice_end]
             avg_score = float(np.mean(score_slice)
                               if len(score_slice) > 0 else 0)
+            
             faces[frame].append({
                 'track': tidx, 'score': avg_score,
                 's': track['proc_track']["s"][fidx],
                 'x': track['proc_track']["x"][fidx],
                 'y': track['proc_track']["y"][fidx]
             })
-
+    # Create video
     temp_video_path = os.path.join(pyavi_path, "video_only.mp4")
     vout = None
     valid_frames_written = 0
@@ -135,6 +150,7 @@ def create_vertical_video(tracks, scores, pyframes_path, pyavi_path, audio_path,
             resize=(target_width, target_height),
         )
 
+        # Determine mode based on face detection
         current_faces = faces[0]
         max_score_face = max(
             current_faces, key=lambda face: face['score']) if current_faces else None
@@ -332,6 +348,7 @@ def create_subtitles_with_ffmpeg(transcript_segments: list, clip_start: float, c
     temp_dir = os.path.dirname(output_path)
     subtitle_path = os.path.join(temp_dir, "temp_subtitles.ass")
 
+    # Filter segments within clip time range
     clip_segments = [segment for segment in transcript_segments
                      if segment.get("start") is not None
                      and segment.get("end") is not None
@@ -362,7 +379,8 @@ def create_subtitles_with_ffmpeg(transcript_segments: list, clip_start: float, c
 
         if not word or seg_start is None or seg_end is None:
             continue
-
+        
+        # Adjust times relative to clip start
         start_rel = max(0.0, seg_start - clip_start)
         end_rel = max(0.0, seg_end - clip_start)
 
@@ -388,12 +406,16 @@ def create_subtitles_with_ffmpeg(transcript_segments: list, clip_start: float, c
         subtitles.append((current_start, current_end, ' '.join(current_words)))
 
     print(f"Generated {len(subtitles)} subtitle events: {subtitles}")
-
     subs = pysubs2.SSAFile()
+    # Set script info
     subs.info["WrapStyle"] = 0
+    # Set scaled border and shadow
     subs.info["ScaledBorderAndShadow"] = "yes"
+    # Set play resolution
     subs.info["PlayResX"] = 1080
+    # Set play resolution height
     subs.info["PlayResY"] = 1920
+    # Set script type
     subs.info["ScriptType"] = "v4.00+"
 
     style_name = "Default"
@@ -446,24 +468,27 @@ def process_clip(base_dir: str, original_video_path: str, s3_key: str, start_tim
     clip_dir = base_dir / clip_name
     clip_dir.mkdir(parents=True, exist_ok=True)
 
+    # Create necessary directories and paths
     clip_segment_path = clip_dir / f"{clip_name}_segment.mp4"
     vertical_mp4_path = clip_dir / "pyavi" / "video_out_vertical.mp4"
     subtitle_output_path = clip_dir / "pyavi" / "video_with_subtitles.mp4"
 
+    # Create pywork, pyframes, pyavi directories
     (clip_dir / "pywork").mkdir(exist_ok=True)
     pyframes_path = clip_dir / "pyframes"
     pyavi_path = clip_dir / "pyavi"
     audio_path = clip_dir / "pyavi" / "audio.wav"
 
+    # Create pyframes and pyavi directories
     pyframes_path.mkdir(exist_ok=True)
     pyavi_path.mkdir(exist_ok=True)
 
     duration = end_time - start_time
-
+    # Cut video segment
     cut_command = f"ffmpeg -i {original_video_path} -ss {start_time} -t {duration} {clip_segment_path}"
     subprocess.run(cut_command, shell=True, check=True,
                    capture_output=True, text=True)
-
+    # Extract audio
     extract_cmd = f"ffmpeg -i {clip_segment_path} -vn -acodec pcm_s16le -ar 16000 -ac 1 {audio_path}"
     subprocess.run(extract_cmd, shell=True, check=True, capture_output=True)
 
@@ -484,7 +509,8 @@ def process_clip(base_dir: str, original_video_path: str, s3_key: str, start_tim
     scores_path = clip_dir / "pywork" / "scores.pckl"
     if not tracks_path.exists() or not scores_path.exists():
         raise FileNotFoundError("Tracks or scores not found for clip")
-
+    
+    # open tracks and scores
     with open(tracks_path, "rb") as f:
         tracks = pickle.load(f)
 
@@ -512,13 +538,16 @@ def process_clip(base_dir: str, original_video_path: str, s3_key: str, start_tim
         raise
 
 
-@app.cls(gpu="L40S", timeout=900, retries=0, scaledown_window=20, secrets=[modal.Secret.from_name("ai-podcast-secret")], volumes={mount_path: volume})
-class AiPodcastClipper:
+@app.cls(gpu="L40S", timeout=900, retries=0, scaledown_window=20, secrets=[modal.Secret.from_name("ReelforgePodcastClipper")], volumes={mount_path: volume})
+class ReelForgePodcastClipper:
     @modal.enter()
     def load_modal(self):
         print("Loading modals...")
+        # transcription models
+        print("Loading transcription models...")
         self.whisperx_model = whisperx.load_model(
             "large-v2", device="cuda", compute_type="float16")
+        # alignment model
         self.alignment_model, self.metadata = whisperx.load_align_model(
             language_code="en", device="cuda")
         print("Transcription models loaded.")
@@ -528,6 +557,7 @@ class AiPodcastClipper:
 
     def transcribe_video(self, base_dir: str, video_path: str):
         audio_path = base_dir / "audio.wav"
+        # convert video to audio
         extract_cmd = f"ffmpeg -i {video_path} -vn -acodec pcm_s16le -ar 16000 -ac 1 -af 'highpass=f=200, volume=2 ' {audio_path}"
         subprocess.run(extract_cmd, shell=True,
                        check=True, capture_output=True)
@@ -542,7 +572,7 @@ class AiPodcastClipper:
             fallback_model = whisperx.load_model(
                 "medium-en", device="cuda", compute_type="float16")
             result = fallback_model.transcribe(audio, batch_size=16, language="en")
-
+        # alignment
         result = whisperx.align(result["segments"], self.alignment_model,
                                 self.metadata, audio, device="cuda", return_char_alignments=False)
         duration = time.time() - start_time
@@ -551,11 +581,13 @@ class AiPodcastClipper:
         segments = []
         if "word_segments" in result:
             for word_segment in result["word_segments"]:
-                segments.append({
-                    "start": word_segment["start"],
-                    "end": word_segment["end"],
-                    "word": word_segment["word"]
-                })
+                # Skip segments that don't have required keys
+                if "start" in word_segment and "end" in word_segment and "word" in word_segment:
+                    segments.append({
+                        "start": word_segment["start"],
+                        "end": word_segment["end"],
+                        "word": word_segment["word"]
+                    })
         return json.dumps(segments)
 
     def identify_moments(self, transcript: dict):
@@ -597,6 +629,7 @@ The transcript is as follows:\n\n
         base_dir = pathlib.Path("/tmp") / run_id
         base_dir.mkdir(parents=True, exist_ok=True)
 
+        # Download video from s3
         video_path = base_dir / "input.mp4"
         s3_client = boto3.client("s3")
         if not S3_BUCKET:
@@ -644,6 +677,7 @@ The transcript is as follows:\n\n
 
         print(f"Identified clip moments: {clip_moments}")
 
+        # Process only the first clip for now
         for index, moment in enumerate(clip_moments[:1]):
             if "start" in moment and "end" in moment:
                 print(
@@ -730,11 +764,12 @@ def main():
     code_time = time.time()
     import requests
 
-    ai_podcast_clipper=AiPodcastClipper()
-    url=ai_podcast_clipper.burn_subtitles.web_url
+    reelforgepodcast_clipper=ReelForgePodcastClipper()
+    url = reelforgepodcast_clipper.process_video.web_url
+
 
     payload={
-        "s3_key": "test2/vlog1.mp4"
+        "s3_key": "test1/testcut.mp4"
     }
 
     headers={

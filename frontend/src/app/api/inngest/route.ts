@@ -1,12 +1,9 @@
 import { serve } from "inngest/next";
-import { inngest } from "~/inngest/client";
+import { inngest } from "../../../inngest/client";
 import { processVideo } from "~/inngest/functions";
 
-
-// Create an API that serves your Inngest functions
+// Create an API that serves zero functions
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [
-    processVideo
-  ],
+  functions: [processVideo],
 });

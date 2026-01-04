@@ -1,15 +1,34 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+// User model for Next Auth
+model User {
+    id            String    @id @default(cuid())
+    name          String?
+    email         String   @unique
+    emailVerified DateTime?
+    password      String
+    credits       Int @default(10)
+    image         String?
+    accounts      Account[]
+    sessions      Session[]
+    posts         Post[]
 
+    uploadedFiles UploadedFile[]
+    clips Clip[]
+}
+// post model
 model Post {
     id        Int      @id @default(autoincrement())
     name      String
@@ -29,12 +48,12 @@ model Account {
     type                     String
     provider                 String
     providerAccountId        String
-    refresh_token            String? // @db.Text
-    access_token             String? // @db.Text
+    refresh_token            String? 
+    access_token             String? 
     expires_at               Int?
     token_type               String?
     scope                    String?
-    id_token                 String? // @db.Text
+    id_token                 String? 
     session_state            String?
     user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
     refresh_token_expires_in Int?
@@ -50,50 +69,41 @@ model Session {
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String   @unique
-    emailVerified DateTime?
-    password      String
-    credits      Int       @default(10)
-    stripeCustomerId String?   @unique
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
-    uploadedFiles UploadedFile[]
-    clips         Clip[]
-}
+
+
 model UploadedFile {
-    id       String   @id @default(cuid())
-    s3Key   String   
+    id String @id @default(cuid())
+    s3Key String
     displayName String?
-    uploaded Boolean  @default(false)
-    status  String?  @default("queued") // e.g., "processing", "completed", "failed" ,"no credits"
+    uploaded Boolean @default(false)
+    status String @default("queued") 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-    clips   Clip[]
-    user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId  String
+
+    clips Clip[]
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
 
     @@index([s3Key])
-    
 }
 
-model Clip{
-    id       String   @id @default(cuid())
-    s3Key   String   
-    displayName String?
+model Clip {
+    id String @id @default(cuid())
+    s3Key String
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
     uploadedFile UploadedFile? @relation(fields: [uploadedFileId], references: [id], onDelete: Cascade)
-    uploadedFileId String
-    user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId  String
-    @@index([s3Key])
+    uploadedFileId String?
 
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
+
+    @@index([s3Key])
 }
+
 model VerificationToken {
     identifier String
     token      String   @unique
@@ -101,4 +111,3 @@ model VerificationToken {
 
     @@unique([identifier, token])
 }
-

@@ -1,28 +1,33 @@
+"use server";
 
-import { redirect } from 'next/navigation'
-import React from 'react'
-import NavHeader from '~/components/navHeader'
-import { db } from '~/server/db'
-import { auth} from "~/server/auth/index";
-import { Toaster } from '~/components/ui/sonner';
+import { redirect } from "next/navigation";
+import type { ReactNode } from "react";
+import NavHeader from "~/components/nav-header";
+import { Toaster } from "~/components/ui/sonner";
+import { auth } from "~/server/auth";
+import { db } from "~/server/db";
 
-const layout = async ({children}:{children: React.ReactNode}) => {
-    const session = await auth();
+export default async function DashboardLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const session = await auth();
 
-    if(!session?.user?.id){
-        redirect("/login")
-    }
-    const user = await db.user.findUniqueOrThrow({
-        where: {id : session.user.id},
-        select: {credits:true , email:true}
-    })
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  const user = await db.user.findUniqueOrThrow({
+    where: { id: session.user.id },
+    select: { credits: true, email: true },
+  });
+
   return (
-    <div className='flex min-h-screen flex-col'>
+    <div className="flex min-h-screen flex-col">
       <NavHeader credits={user.credits} email={user.email} />
-      <main className='container mx-auto flex-1 py-6' >{children}</main>
-      <Toaster/>
+      <main className="container mx-auto flex-1 py-6">{children}</main>
+      <Toaster />
     </div>
-  )
+  );
 }
-
-export default layout

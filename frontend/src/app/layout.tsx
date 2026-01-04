@@ -1,12 +1,12 @@
-import "../styles/globals.css";
+import "~/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
 export const metadata: Metadata = {
-  title: "Visible Podcast Clipper",
-  description: "A tool for clipping and sharing podcast highlights",
-  icons: [{ rel: "icon", url: "/lg.png" }],
+  title: "Podcast Clipper",
+  description: "Podcast Clipper",
+  icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
 const geist = Geist({

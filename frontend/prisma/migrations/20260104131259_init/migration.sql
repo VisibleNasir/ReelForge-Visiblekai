@@ -1,4 +1,18 @@
 -- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "name" TEXT,
+    "email" TEXT NOT NULL,
+    "emailVerified" TIMESTAMP(3),
+    "password" TEXT NOT NULL,
+    "credits" INTEGER NOT NULL DEFAULT 10,
+    "stripeCustomerId" TEXT,
+    "image" TEXT,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Post" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
@@ -39,26 +53,12 @@ CREATE TABLE "Session" (
 );
 
 -- CreateTable
-CREATE TABLE "User" (
-    "id" TEXT NOT NULL,
-    "name" TEXT,
-    "email" TEXT NOT NULL,
-    "emailVerified" TIMESTAMP(3),
-    "password" TEXT NOT NULL,
-    "credits" INTEGER NOT NULL DEFAULT 10,
-    "stripeCustomerId" TEXT,
-    "image" TEXT,
-
-    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "UploadedFile" (
     "id" TEXT NOT NULL,
     "s3Key" TEXT NOT NULL,
     "displayName" TEXT,
     "uploaded" BOOLEAN NOT NULL DEFAULT false,
-    "status" TEXT DEFAULT 'queued',
+    "status" TEXT NOT NULL DEFAULT 'queued',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "userId" TEXT NOT NULL,
@@ -70,10 +70,9 @@ CREATE TABLE "UploadedFile" (
 CREATE TABLE "Clip" (
     "id" TEXT NOT NULL,
     "s3Key" TEXT NOT NULL,
-    "displayName" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "uploadedFileId" TEXT NOT NULL,
+    "uploadedFileId" TEXT,
     "userId" TEXT NOT NULL,
 
     CONSTRAINT "Clip_pkey" PRIMARY KEY ("id")
@@ -87,6 +86,12 @@ CREATE TABLE "VerificationToken" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_stripeCustomerId_key" ON "User"("stripeCustomerId");
+
+-- CreateIndex
 CREATE INDEX "Post_name_idx" ON "Post"("name");
 
 -- CreateIndex
@@ -94,12 +99,6 @@ CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provi
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_stripeCustomerId_key" ON "User"("stripeCustomerId");
 
 -- CreateIndex
 CREATE INDEX "UploadedFile_s3Key_idx" ON "UploadedFile"("s3Key");

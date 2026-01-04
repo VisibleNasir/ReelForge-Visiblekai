@@ -1,21 +1,21 @@
+"use server";
 
-import { redirect } from 'next/navigation'
-import React from 'react'
-import LoginForm from '~/components/LoginForm'
-import { auth } from '~/server/auth'
+import { redirect } from "next/navigation";
+import { LoginForm } from "~/components/login-form";
+import { auth } from "~/server/auth";
 
-const page = async() => {
-  const session = await auth()
+export default async function Page() {
+  const session = await auth();
 
-  if(session){
-    redirect("/dashboard")
+  if (session) {
+    redirect("/dashboard");
   }
 
   return (
-    <div className='flex h-screen w-screen items-center justify-center bg-slate-950'>
-      <LoginForm />
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <div className="w-full max-w-sm">
+        <LoginForm />
+      </div>
     </div>
-  )
+  );
 }
-
-export default page

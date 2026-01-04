@@ -1,5 +1,5 @@
-tqdm 
-torch 
+tqdm
+torch
 opencv-python
 ffmpegcv
 numpy
@@ -13,8 +13,9 @@ pandas
 transformers
 accelerate
 datasets
-google-genai 
+google-genai
 pysubs2
 boto3
 fastapi[standard]
 whisperx
+matplotlib 
