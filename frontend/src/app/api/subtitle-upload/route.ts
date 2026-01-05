@@ -6,6 +6,9 @@ import { v4 as uuidv4 } from "uuid";
 import { db } from "~/server/db";
 import { burnSubtitles } from "~/actions/subtitle";
 
+// Increase request timeout and body size for large file uploads
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
