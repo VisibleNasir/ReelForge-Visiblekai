@@ -61,7 +61,7 @@ mount_path = "/root/.cache/torch"
 
 auth_scheme = HTTPBearer()
 
-# S3 bucket name (use env var to avoid hardcoding and accidental typos/spaces)
+# S3 bucket name 
 _S3_BUCKET_RAW = os.environ.get("S3_BUCKET", "reelforge-podcast-clipper")
 
 
@@ -87,7 +87,7 @@ except ValueError as e:
 def create_vertical_video(tracks, scores, pyframes_path, pyavi_path, audio_path, output_path, framerate=25):
     target_width = 1080
     target_height = 1920
-    # Get list of frames
+
     flist = glob.glob(os.path.join(pyframes_path, "*.jpg"))
     flist.sort()
     print(f"Found {len(flist)} frames in {pyframes_path}")
@@ -108,7 +108,6 @@ def create_vertical_video(tracks, scores, pyframes_path, pyavi_path, audio_path,
         print(f"Failed to probe audio duration: {e}")
         audio_duration = 0
 
-    # Prepare face data per frame
     faces = [[] for _ in range(len(flist))]
     for tidx, track in enumerate(tracks):
         score_array = scores[tidx]
@@ -150,7 +149,6 @@ def create_vertical_video(tracks, scores, pyframes_path, pyavi_path, audio_path,
             resize=(target_width, target_height),
         )
 
-        # Determine mode based on face detection
         current_faces = faces[0]
         max_score_face = max(
             current_faces, key=lambda face: face['score']) if current_faces else None
@@ -328,7 +326,7 @@ def create_vertical_video(tracks, scores, pyframes_path, pyavi_path, audio_path,
 
     print(f"Written {valid_frames_written} valid frames to {temp_video_path}")
 
-    # Mux audio and video
+    # mix audio and video
     ffmpeg_command = (
         f"ffmpeg -y -i {temp_video_path} -i {audio_path} "
         f"-c:v copy -c:a aac -b:a 128k -shortest "
@@ -348,7 +346,6 @@ def create_subtitles_with_ffmpeg(transcript_segments: list, clip_start: float, c
     temp_dir = os.path.dirname(output_path)
     subtitle_path = os.path.join(temp_dir, "temp_subtitles.ass")
 
-    # Filter segments within clip time range
     clip_segments = [segment for segment in transcript_segments
                      if segment.get("start") is not None
                      and segment.get("end") is not None
@@ -468,27 +465,23 @@ def process_clip(base_dir: str, original_video_path: str, s3_key: str, start_tim
     clip_dir = base_dir / clip_name
     clip_dir.mkdir(parents=True, exist_ok=True)
 
-    # Create necessary directories and paths
     clip_segment_path = clip_dir / f"{clip_name}_segment.mp4"
     vertical_mp4_path = clip_dir / "pyavi" / "video_out_vertical.mp4"
     subtitle_output_path = clip_dir / "pyavi" / "video_with_subtitles.mp4"
 
-    # Create pywork, pyframes, pyavi directories
     (clip_dir / "pywork").mkdir(exist_ok=True)
     pyframes_path = clip_dir / "pyframes"
     pyavi_path = clip_dir / "pyavi"
     audio_path = clip_dir / "pyavi" / "audio.wav"
 
-    # Create pyframes and pyavi directories
     pyframes_path.mkdir(exist_ok=True)
     pyavi_path.mkdir(exist_ok=True)
 
     duration = end_time - start_time
-    # Cut video segment
     cut_command = f"ffmpeg -i {original_video_path} -ss {start_time} -t {duration} {clip_segment_path}"
     subprocess.run(cut_command, shell=True, check=True,
                    capture_output=True, text=True)
-    # Extract audio
+    
     extract_cmd = f"ffmpeg -i {clip_segment_path} -vn -acodec pcm_s16le -ar 16000 -ac 1 {audio_path}"
     subprocess.run(extract_cmd, shell=True, check=True, capture_output=True)
 
@@ -518,6 +511,7 @@ def process_clip(base_dir: str, original_video_path: str, s3_key: str, start_tim
         scores = pickle.load(f)
 
     cvv_start_time = time.time()
+    # 1. Create vertical video
     create_vertical_video(
         tracks, scores, pyframes_path, pyavi_path, audio_path, vertical_mp4_path
     )
@@ -525,6 +519,7 @@ def process_clip(base_dir: str, original_video_path: str, s3_key: str, start_tim
     print(
         f"Clip {clip_index} vertical video creation time: {cvv_end_time - cvv_start_time:.2f} seconds.")
 
+    2. # Create subtitles and burn them into video
     create_subtitles_with_ffmpeg(transcript_segments, start_time,
                                  end_time, vertical_mp4_path, subtitle_output_path, max_words=5)
 
@@ -657,10 +652,11 @@ The transcript is as follows:\n\n
                     status_code=403, detail="Access denied to S3 object")
             raise HTTPException(
                 status_code=500, detail=f"S3 download error: {e}")
-
+        1. # Transcribe Video
         transcript_segments_json = self.transcribe_video(base_dir, video_path)
         transcript_segments = json.loads(transcript_segments_json)
 
+        2. # Identify Moments
         print("Identifying moments for clips...")
         identified_moments_raw = self.identify_moments(transcript_segments)
         cleaned_json_string = identified_moments_raw.strip()
@@ -678,16 +674,26 @@ The transcript is as follows:\n\n
         print(f"Identified clip moments: {clip_moments}")
 
         # Process only the first clip for now
+        processed_clips = []
+        s3_key_dir = os.path.dirname(s3_key)
+        
         for index, moment in enumerate(clip_moments[:1]):
             if "start" in moment and "end" in moment:
                 print(
                     f"Processing clip {index} from {moment['start']} to {moment['end']}")
                 process_clip(base_dir, video_path, s3_key,
                              moment["start"], moment["end"], index, transcript_segments)
+                
+                # Add the processed clip S3 key to the list
+                clip_s3_key = f"{s3_key_dir}/clip_{index}.mp4"
+                processed_clips.append({"s3_key": clip_s3_key})
 
         if base_dir.exists():
             print(f"Cleaning up temp dir after {base_dir}")
             shutil.rmtree(base_dir, ignore_errors=True)
+        
+        # Return the clips that were processed
+        return {"clips": processed_clips, "status": "completed"}
 
     @modal.fastapi_endpoint(method="POST")
     def burn_subtitles(self, request: BurnSubtitlesRequest, token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
@@ -754,24 +760,31 @@ The transcript is as follows:\n\n
         
         if base_dir.exists():
             shutil.rmtree(base_dir, ignore_errors=True)
-        # return response
         
-        return {"output_s3_key": output_s3_key}
+        # Return in the same format as process_video for consistency
+        return {
+            "clips": [{"s3_key": output_s3_key}],
+            "status": "completed"
+        }
 
 
 @ app.local_entrypoint()
 def main():
     code_time = time.time()
+    
     import requests
 
     reelforgepodcast_clipper=ReelForgePodcastClipper()
+
+    # video processing endpoint
     url = reelforgepodcast_clipper.process_video.web_url
 
+    # subtitle burning endpoint
+    # url_burn = reelforgepodcast_clipper.burn_subtitles.web_url
 
     payload={
         "s3_key": "test1/testcut.mp4"
     }
-
     headers={
         "Content-Type": "application/json",
         "Authorization": "Bearer 123123"
