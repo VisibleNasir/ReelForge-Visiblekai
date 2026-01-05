@@ -1,10 +1,10 @@
 "use client";
 
-type Clip = { id: string };
 import { Download, Loader2, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getClipPlayUrl } from "~/actions/generation";
 import { Button } from "./ui/button";
+import type { Clip } from "generated/prisma";
 
 function ClipCard({ clip }: { clip: Clip }) {
   const [playUrl, setPlayUrl] = useState<string | null>(null);
