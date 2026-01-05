@@ -1,7 +1,6 @@
 "use client";
 
 import { useDropzone } from "react-dropzone";
-import type { Clip } from "@prisma/client";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import {
@@ -26,8 +25,10 @@ import {
 import { Badge } from "./ui/badge";
 import { useRouter } from "next/navigation";
 import { ClipDisplay } from "./clip-display";
-import { SubtitleCard } from "./subtitle-card";
 
+interface Clip {
+  id: string;
+}
 export function DashboardClient({
   uploadedFiles,
   clips,
