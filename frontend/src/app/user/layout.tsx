@@ -1,9 +1,6 @@
-"use server";
-
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import NavHeader from "~/components/nav-header";
-import { Toaster } from "~/components/ui/sonner";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
