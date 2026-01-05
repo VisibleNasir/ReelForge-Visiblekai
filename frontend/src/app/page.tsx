@@ -36,14 +36,14 @@ export default function HomePage() {
 
         <div className="mt-10 flex justify-center gap-4">
           <Link
-            href="/dashboard"
+            href="/user/dashboard"
             className="rounded-lg bg-zinc-900 dark:bg-zinc-100 px-6 py-3 text-sm font-medium text-zinc-100 dark:text-zinc-900 hover:opacity-90 transition"
           >
             Open Dashboard
           </Link>
 
           <Link
-            href="/clips"
+            href="/user/dashboard"
             className="rounded-lg border border-zinc-300 dark:border-zinc-700 px-6 py-3 text-sm font-medium hover:bg-zinc-100 dark:hover:bg-zinc-900 transition"
           >
             Generate Clips
