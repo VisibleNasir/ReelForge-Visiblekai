@@ -1,6 +1,6 @@
 "use client";
 
-import type { Clip } from "@prisma/client";
+type Clip = { id: string };
 import { Download, Loader2, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getClipPlayUrl } from "~/actions/generation";

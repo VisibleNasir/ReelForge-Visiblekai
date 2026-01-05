@@ -54,6 +54,12 @@ export async function POST(request: NextRequest) {
         })),
       });
 
+      // Decrement credits based on generated clips
+      await db.user.update({
+        where: { id: uploadedFile.userId },
+        data: { credits: { decrement: clips.length } },
+      });
+
       // Update file status to completed
       await db.uploadedFile.update({
         where: { id: uploaded_file_id },

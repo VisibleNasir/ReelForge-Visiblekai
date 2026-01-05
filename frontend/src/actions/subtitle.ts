@@ -137,6 +137,11 @@ export async function burnSubtitles(uploadedFileId: string) {
           userId: uploadedFile.userId,
         },
       });
+
+      await db.user.update({
+        where: { id: uploadedFile.userId },
+        data: { credits: { decrement: 1 } },
+      });
     } else if (Array.isArray(clips) && clips.length > 0) {
       await db.clip.createMany({
         data: clips.map((clip: { s3_key?: string; s3Key?: string }) => ({
@@ -144,6 +149,11 @@ export async function burnSubtitles(uploadedFileId: string) {
           uploadedFileId: uploadedFile.id,
           userId: uploadedFile.userId,
         })),
+      });
+
+      await db.user.update({
+        where: { id: uploadedFile.userId },
+        data: { credits: { decrement: clips.length } },
       });
     } else {
       // If nothing returned, mark as processing and rely on webhook

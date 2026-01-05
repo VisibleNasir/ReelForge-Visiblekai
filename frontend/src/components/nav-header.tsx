@@ -29,7 +29,9 @@ const NavHeader = ({ credits, email }: { credits: number; email: string }) => {
 
         {/* Right section */}
         <div className="flex items-center gap-4">
-          
+          <Badge variant="secondary" className="px-3 py-1 text-sm">
+            Credits: {credits}
+          </Badge>
 
           {/* Mode Toggle */}
           <div className="flex items-center">
@@ -61,6 +63,13 @@ const NavHeader = ({ credits, email }: { credits: number; email: string }) => {
                   {email}
                 </p>
               </DropdownMenuLabel>
+
+              <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
+
+              <DropdownMenuItem className="text-sm">
+                Add credits via UPI:
+                <span className="ml-1 font-mono text-xs">7822952595@ibl</span>
+              </DropdownMenuItem>
 
               <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
 

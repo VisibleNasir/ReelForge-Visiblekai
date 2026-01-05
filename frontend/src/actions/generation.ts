@@ -85,7 +85,14 @@ export async function processVideo(uploadedFileId: string) {
           userId: uploadedVideo.userId,
         })),
       });
-      console.log(`Saved ${clips.length} clips to database`);
+
+      // Decrement credits by number of clips generated
+      await db.user.update({
+        where: { id: uploadedVideo.userId },
+        data: { credits: { decrement: clips.length } },
+      });
+
+      console.log(`Saved ${clips.length} clips to database and decremented credits`);
     } else {
       // If Modal returns async processing status, update file status and wait for webhook
       console.log("Modal is processing video asynchronously, waiting for webhook callback");
