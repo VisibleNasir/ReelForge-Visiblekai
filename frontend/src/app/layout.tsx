@@ -2,6 +2,8 @@ import "~/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Providers } from "~/components/providers";
+import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   title: "ReelForge - Podcast Clipper",
@@ -19,7 +21,9 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable}`}>
-      <body>{children}</body>
+      <body className="bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+        <SessionProvider> <Providers>{children}</Providers></SessionProvider>
+      </body>
     </html>
   );
 }

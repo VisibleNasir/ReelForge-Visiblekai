@@ -2,7 +2,6 @@
 
 import { useDropzone } from "react-dropzone";
 import type { Clip } from "@prisma/client";
-import Link from "next/link";
 import { Button } from "./ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import {
@@ -27,7 +26,7 @@ import {
 import { Badge } from "./ui/badge";
 import { useRouter } from "next/navigation";
 import { ClipDisplay } from "./clip-display";
-import { ModeToggle } from "./ui/mode-toggle";
+import { SubtitleCard } from "./subtitle-card";
 
 export function DashboardClient({
   uploadedFiles,
@@ -44,9 +43,19 @@ export function DashboardClient({
   clips: Clip[];
 }) {
   const [files, setFiles] = useState<File[]>([]);
+  const [subtitleFiles, setSubtitleFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [subtitleUploading, setSubtitleUploading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedFileId && uploadedFiles.length > 0) {
+      setSelectedFileId(uploadedFiles[0]?.id ?? null);
+    }
+  }, [uploadedFiles, selectedFileId]);
+
 
   // Auto-refresh when files are processing
   useEffect(() => {
@@ -77,6 +86,18 @@ export function DashboardClient({
     disabled: uploading,
   });
 
+  const {
+    getRootProps: getSubtitleRootProps,
+    getInputProps: getSubtitleInputProps,
+    isDragActive: isSubtitleDragActive,
+  } = useDropzone({
+    onDrop: (acceptedFiles) => setSubtitleFiles(acceptedFiles),
+    accept: { "video/*": [".mp4", ".mov", ".avi"] },
+    maxSize: 500 * 1024 * 1024,
+    maxFiles: 1,
+    disabled: subtitleUploading,
+  });
+
   const handleUpload = async () => {
     if (files.length === 0) return;
 
@@ -101,6 +122,8 @@ export function DashboardClient({
 
       await processVideo(uploadedFileId);
 
+      setSelectedFileId(uploadedFileId);
+
       setFiles([]);
 
       toast.success("Video uploaded and processing started", {
@@ -117,147 +140,183 @@ export function DashboardClient({
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "uploading":
-      case "queued":
-        return <Badge variant="secondary">In Queue</Badge>;
-      case "processing":
-        return <Badge variant="secondary">Processing</Badge>;
-      case "completed":
-        return <Badge>Ready</Badge>;
-      case "failed":
-      case "no credits":
-        return <Badge variant="destructive">{status === "no credits" ? "No Credits" : "Failed"}</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
+  const handleSubtitleUpload = async () => {
+    if (subtitleFiles.length === 0) return;
+
+    const file = subtitleFiles[0]!;
+    setSubtitleUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadResponse = await fetch("/api/subtitle-upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData.error || `Upload failed: ${uploadResponse.status}`);
+      }
+
+      const { uploadedFileId } = await uploadResponse.json();
+
+      setSubtitleFiles([]);
+      setSelectedFileId(uploadedFileId);
+
+      toast.success("Burned subtitles started", {
+        description: "We will refresh once the burned version is ready.",
+        duration: 6000,
+      });
+    } catch (err) {
+      toast.error("Subtitle upload failed", {
+        description:
+          err instanceof Error ? err.message : "An unexpected error occurred.",
+      });
+    } finally {
+      setSubtitleUploading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight">Podcast Clipper</h1>
-            <p className="mt-2 text-lg text-muted-foreground">
-              Transform long-form podcasts into engaging short clips with AI
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <ModeToggle />
-            <Link href="/dashboard/billing">
-              <Button size="lg">Buy Credits</Button>
-            </Link>
-          </div>
-        </div>
+  const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "uploading":
+    case "queued":
+      return <Badge variant="secondary">In Queue</Badge>;
+    case "processing":
+      return <Badge variant="secondary">Processing</Badge>;
+    case "completed":
+      return <Badge>Ready</Badge>; 
+    case "failed":
+    case "no credits":
+      return <Badge variant="destructive">{status === "no credits" ? "No Credits" : "Failed"}</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
 
-        <Tabs defaultValue="upload" className="space-y-8">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="upload">Upload Video</TabsTrigger>
-            <TabsTrigger value="my-clips">My Clips</TabsTrigger>
+};
+
+  // Filter files by type based on s3Key pattern
+  const regularUploads = uploadedFiles.filter(file => file.s3Key.includes('/original.'));
+  const subtitleBurns = uploadedFiles.filter(file => file.s3Key.includes('/subtitle.'));
+
+
+  return (
+    <div className="h-full bg-zinc-50 dark:bg-zinc-950">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+
+        <Tabs defaultValue="upload" >
+          <TabsList className="grid w-full max-w-sm grid-cols-3 bg-zinc-100 p-1 dark:bg-zinc-900">
+            <TabsTrigger value="upload">Upload</TabsTrigger>
+            <TabsTrigger value="subtitle">Burn subtitle</TabsTrigger>
+            <TabsTrigger value="my-clips">Clips</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="upload" className="space-y-8">
-            <Card className="overflow-hidden">
-              <CardHeader className="border-b bg-muted/40">
-                <CardTitle>Upload a New Podcast</CardTitle>
+          {/* Upload */}
+          <TabsContent value="upload" >
+            <Card className="border-zinc-200 dark:border-zinc-950">
+              <CardHeader className="space-y-1">
+                <CardTitle>Upload Video</CardTitle>
                 <CardDescription>
-                  Drag and drop your video file or click to browse. Supports MP4, MOV, AVI up to 500MB.
+                  Upload your podcast or long video. We’ll automatically extract
+                  clips and generate subtitles.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-8">
+
+              <CardContent className="space-y-2">
                 <div
                   {...getRootProps()}
                   className={`
-                    relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed 
-                    p-12 text-center transition-colors cursor-pointer
-                    ${isDragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50 hover:bg-accent/50"}
-                    ${uploading ? "opacity-50 cursor-not-allowed" : ""}
+                    flex cursor-pointer flex-col items-center justify-center
+                     border-2 border-dashed p-4 text-center transition
+                    ${isDragActive
+                      ? "border-zinc-900 bg-zinc-100 dark:border-white dark:bg-zinc-900"
+                      : "border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"}
+                    ${uploading ? "pointer-events-none opacity-60" : ""}
                   `}
                 >
                   <input {...getInputProps()} />
-                  <UploadCloud className="h-16 w-16 text-muted-foreground mb-6" />
-                  {isDragActive ? (
-                    <p className="text-lg font-medium">Drop your video here</p>
-                  ) : (
-                    <>
-                      <p className="text-lg font-medium">Drag & drop your video file here</p>
-                      <p className="mt-2 text-sm text-muted-foreground">or click to select from your device</p>
-                    </>
-                  )}
+                  <UploadCloud className="mb-4 h-14 w-14 text-zinc-400" />
+                  <p className="text-base font-medium">
+                    Drag & drop your video here
+                  </p>
+                  <p className="mt-1 text-sm text-zinc-500">
+                    MP4, MOV, AVI — up to 500MB
+                  </p>
                 </div>
 
                 {files.length > 0 && (
-                  <div className="mt-8 rounded-lg border bg-muted/30 p-6">
-                    <h4 className="font-medium mb-3">Selected file</h4>
-                    <div className="flex items-center justify-between">
-                      <div className="truncate">
-                        <p className="font-medium">{files[0]?.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {(files[0]?.size / (1024 * 1024)).toFixed(1)} MB
-                        </p>
-                      </div>
-                      <Button
-                        size="lg"
-                        onClick={handleUpload}
-                        disabled={uploading}
-                      >
-                        {uploading ? (
-                          <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Uploading & Processing...
-                          </>
-                        ) : (
-                          "Upload & Generate Clips"
-                        )}
-                      </Button>
+                  <div className="flex items-center justify-between rounded-xl border bg-zinc-100 p-5 dark:bg-zinc-900">
+                    <div className="truncate">
+                      <p className="font-medium">{files[0]?.name}</p>
+                      <p className="text-sm text-zinc-500">
+                        {(files[0]?.size / (1024 * 1024)).toFixed(1)} MB
+                      </p>
                     </div>
+
+                    <Button onClick={handleUpload} disabled={uploading}>
+                      {uploading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing
+                        </>
+                      ) : (
+                        "Generate Clips"
+                      )}
+                    </Button>
                   </div>
                 )}
 
-                {uploadedFiles.length > 0 && (
-                  <div className="mt-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-semibold">Processing Queue</h3>
-                      <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
-                        {refreshing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Refresh Status
+                {regularUploads.length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">
+                        Processing Status
+                      </h3>
+                      <Button
+                        variant="default"
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                      >
+                        {refreshing && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Refresh
                       </Button>
                     </div>
 
-                    <div className="rounded-lg border overflow-hidden">
+                    <div className="overflow-hidden  border">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>File Name</TableHead>
+                            <TableHead>File</TableHead>
                             <TableHead>Uploaded</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Clips Generated</TableHead>
+                            <TableHead className="text-right">
+                              Clips
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {uploadedFiles.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell className="font-medium truncate max-w-xs">
+                          {regularUploads.map((item) => (
+                            <TableRow
+                              key={item.id}
+                              className="cursor-pointer"
+                              onClick={() => setSelectedFileId(item.id)}
+                            >
+                              <TableCell className="max-w-xs truncate font-medium">
                                 {item.filename}
                               </TableCell>
-                              <TableCell className="text-muted-foreground">
-                                {new Date(item.createdAt).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
+                              <TableCell className="text-zinc-500">
+                                {new Date(item.createdAt).toLocaleString()}
                               </TableCell>
-                              <TableCell>{getStatusBadge(item.status)}</TableCell>
+                              <TableCell>
+                                {getStatusBadge(item.status)}
+                              </TableCell>
                               <TableCell className="text-right">
-                                {item.clipsCount > 0 ? (
-                                  <span className="font-medium">{item.clipsCount}</span>
-                                ) : (
-                                  <span className="text-muted-foreground">—</span>
-                                )}
+                                {item.clipsCount || "—"}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -270,18 +329,133 @@ export function DashboardClient({
             </Card>
           </TabsContent>
 
+          {/* Clips */}
           <TabsContent value="my-clips">
             <Card>
               <CardHeader>
-                <CardTitle>Your Generated Clips</CardTitle>
+                <CardTitle>Your Clips</CardTitle>
                 <CardDescription>
-                  All AI-generated clips from your uploaded podcasts. New clips appear automatically.
+                  AI-generated clips with subtitles, ready to publish.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ClipDisplay clips={clips} />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Subtitle Burn */}
+          <TabsContent value="subtitle">
+            <div className="space-y-8">
+              <Card className="border-zinc-200 dark:border-zinc-800">
+                <CardHeader className="space-y-1">
+                  <CardTitle>Burn Subtitles</CardTitle>
+                  <CardDescription>
+                    Upload a video to generate a burned-in subtitle version.
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="space-y-6">
+                  <div
+                    {...getSubtitleRootProps()}
+                    className={`
+                      flex cursor-pointer flex-col items-center justify-center
+                      rounded-xl border-2 border-dashed p-10 text-center transition
+                      ${isSubtitleDragActive
+                        ? "border-zinc-900 bg-zinc-100 dark:border-white dark:bg-zinc-900"
+                        : "border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"}
+                      ${subtitleUploading ? "pointer-events-none opacity-60" : ""}
+                    `}
+                  >
+                    <input {...getSubtitleInputProps()} />
+                    <UploadCloud className="mb-4 h-12 w-12 text-zinc-400" />
+                    <p className="text-base font-medium">Drop a video to burn subtitles</p>
+                    <p className="mt-1 text-sm text-zinc-500">MP4, MOV, AVI — up to 500MB</p>
+                  </div>
+
+                  {subtitleFiles.length > 0 && (
+                    <div className="flex items-center justify-between rounded-xl border bg-zinc-100 p-5 dark:bg-zinc-900">
+                      <div className="truncate">
+                        <p className="font-medium">{subtitleFiles[0]?.name}</p>
+                        <p className="text-sm text-zinc-500">
+                          {(subtitleFiles[0]?.size / (1024 * 1024)).toFixed(1)} MB
+                        </p>
+                      </div>
+
+                      <Button onClick={handleSubtitleUpload} disabled={subtitleUploading}>
+                        {subtitleUploading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Burning
+                          </>
+                        ) : (
+                          "Burn Subtitles"
+                        )}
+                      </Button>
+                    </div>
+                  )}
+
+                  {subtitleBurns.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">
+                          Burned Subtitle Videos
+                        </h3>
+                        <Button
+                          variant="outline"
+                          onClick={handleRefresh}
+                          disabled={refreshing}
+                        >
+                          {refreshing && (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          )}
+                          Refresh
+                        </Button>
+                      </div>
+
+                      <div className="overflow-hidden rounded-xl border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>File</TableHead>
+                              <TableHead>Uploaded</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="text-right">
+                                Result
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {subtitleBurns.map((item) => (
+                              <TableRow
+                                key={item.id}
+                                className="cursor-pointer"
+                                onClick={() => setSelectedFileId(item.id)}
+                              >
+                                <TableCell className="max-w-xs truncate font-medium">
+                                  {item.filename}
+                                </TableCell>
+                                <TableCell className="text-zinc-500">
+                                  {new Date(item.createdAt).toLocaleString()}
+                                </TableCell>
+                                <TableCell>
+                                  {getStatusBadge(item.status)}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {item.clipsCount || "—"}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  )}
+
+                 
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

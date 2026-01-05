@@ -50,19 +50,22 @@ export const authConfig = {
         const user = await db.user.findUnique({
           where: { email },
         })
-        if(!user){
+        if(!user || !user.password){
           return null;
         }
 
         const passwordMatch = await comparePasswords(password , user.password);
         if(!passwordMatch)  return null;
 
-        return user;
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        };
       }
     })
   ],
   session: {strategy:"jwt"},
-  adapter: PrismaAdapter(db),
   callbacks: {
     session: ({ session, token }) => ({
       ...session,
@@ -73,9 +76,12 @@ export const authConfig = {
     }),
     jwt:({token , user}) =>{
       if(user){
-        token.id = user.id
+        token.sub = user.id
       }
       return token;
     }
+  },
+  pages: {
+    signIn: '/login',
   },
 } satisfies NextAuthConfig;

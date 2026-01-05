@@ -17,7 +17,7 @@ export default async function Page() {
 
     if (user) {
       // User exists, redirect to dashboard
-      redirect("/dashboard");
+      redirect("/user/dashboard");
     }
     // If user doesn't exist, stay on login
   }

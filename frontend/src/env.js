@@ -23,6 +23,14 @@ export const env = createEnv({
     S3_BUCKET_NAME: z.string(),
     PROCESS_VIDEO_ENDPOINT: z.string(),
     PROCESS_VIDEO_ENDPOINT_AUTH: z.string(),
+    BURN_SUBTITLES_ENDPOINT:
+      process.env.NODE_ENV === "production"
+        ? z.string()
+        : z.string().optional(),
+    BURN_SUBTITLES_ENDPOINT_AUTH:
+      process.env.NODE_ENV === "production"
+        ? z.string()
+        : z.string().optional(),
     BASE_URL: z.string(),
   },
 
@@ -51,6 +59,8 @@ export const env = createEnv({
     S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
     PROCESS_VIDEO_ENDPOINT: process.env.PROCESS_VIDEO_ENDPOINT,
     PROCESS_VIDEO_ENDPOINT_AUTH: process.env.PROCESS_VIDEO_ENDPOINT_AUTH,
+    BURN_SUBTITLES_ENDPOINT: process.env.BURN_SUBTITLES_ENDPOINT,
+    BURN_SUBTITLES_ENDPOINT_AUTH: process.env.BURN_SUBTITLES_ENDPOINT_AUTH,
     BASE_URL: process.env.BASE_URL,
   },
   /**

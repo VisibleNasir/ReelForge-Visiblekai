@@ -26,6 +26,7 @@ model User {
 
     uploadedFiles UploadedFile[]
     clips Clip[]
+    subtitleJobs SubtitleJob[]
 }
 // post model
 model Post {
@@ -39,6 +40,16 @@ model Post {
 
     @@index([name])
 }
+model SubtitleJob {
+  id           String   @id @default(uuid())
+  videoS3Key   String
+  subtitleS3Key String?
+  status       String   // queued | processing | completed | failed
+  createdAt    DateTime @default(now())
+  createdBy    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId       String
+}
+
 
 // Necessary for Next auth
 model Account {
@@ -76,6 +87,8 @@ model UploadedFile {
     displayName String?
     uploaded Boolean @default(false)
     status String @default("queued") 
+    subtitleSrt String?
+    subtitleVtt String?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 

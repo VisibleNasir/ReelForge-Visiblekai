@@ -9,17 +9,14 @@ export default async function Page() {
   const session = await auth();
 
   if (session?.user?.id) {
-    // Check if user exists in database
     const user = await db.user.findUnique({
       where: { id: session.user.id },
       select: { id: true },
     });
 
     if (user) {
-      // User exists, redirect to dashboard
-      redirect("/dashboard");
+      redirect("/user/dashboard");
     }
-    // If user doesn't exist, stay on signup to create account
   }
 
   return (

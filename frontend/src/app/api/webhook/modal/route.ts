@@ -1,50 +1,104 @@
 import { NextRequest, NextResponse } from "next/server";
-import { env } from "~/env";
 import { db } from "~/server/db";
+import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authorization header
-    const authHeader = request.headers.get("authorization");
-    if (authHeader !== `Bearer ${env.PROCESS_VIDEO_ENDPOINT_AUTH}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const body = await request.json();
-    const { uploaded_file_id, user_id, clips, status } = body;
+    console.log("Webhook received from Modal:", JSON.stringify(body, null, 2));
 
-    if (!uploaded_file_id || !user_id) {
+    const { uploaded_file_id, clips, status, error } = body;
+
+    if (!uploaded_file_id) {
+      console.error("Missing uploaded_file_id in webhook payload");
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing uploaded_file_id" },
         { status: 400 }
       );
     }
 
-    // Update the uploaded file status
-    await db.uploadedFile.update({
+    // Check if file exists
+    const uploadedFile = await db.uploadedFile.findUnique({
       where: { id: uploaded_file_id },
-      data: {
-        status: status ?? "completed",
-        uploaded: true,
-      },
     });
 
-    // Save clips if provided
-    if (clips && Array.isArray(clips)) {
+    if (!uploadedFile) {
+      console.error(`Uploaded file not found: ${uploaded_file_id}`);
+      return NextResponse.json(
+        { error: "Uploaded file not found" },
+        { status: 404 }
+      );
+    }
+
+    // Handle error status
+    if (status === "failed" || error) {
+      console.error(`Processing failed for ${uploaded_file_id}:`, error);
+      await db.uploadedFile.update({
+        where: { id: uploaded_file_id },
+        data: { status: "failed" },
+      });
+      revalidatePath("/dashboard");
+      return NextResponse.json({ success: true, message: "Status updated to failed" });
+    }
+
+    // Handle success with clips
+    if (clips && Array.isArray(clips) && clips.length > 0) {
+      console.log(`Processing ${clips.length} clips for file ${uploaded_file_id}`);
+
+      // Create clips in database
       await db.clip.createMany({
-        data: clips.map((clip: { s3_key: string }) => ({
-          s3Key: clip.s3_key,
-          uploadedFileId: uploaded_file_id,
-          userId: user_id,
+        data: clips.map((clip: { s3_key?: string; s3Key?: string }) => ({
+          s3Key: clip.s3_key || clip.s3Key,
+          uploadedFileId: uploadedFile.id,
+          userId: uploadedFile.userId,
         })),
+      });
+
+      // Update file status to completed
+      await db.uploadedFile.update({
+        where: { id: uploaded_file_id },
+        data: {
+          status: "completed",
+          uploaded: true,
+        },
+      });
+
+      console.log(`Successfully processed ${clips.length} clips`);
+      revalidatePath("/dashboard");
+      return NextResponse.json({
+        success: true,
+        message: `Processed ${clips.length} clips`,
       });
     }
 
-    return NextResponse.json({ success: true, clips_created: clips?.length ?? 0 });
+    // No clips but success status
+    if (status === "completed") {
+      await db.uploadedFile.update({
+        where: { id: uploaded_file_id },
+        data: {
+          status: "completed",
+          uploaded: true,
+        },
+      });
+      console.log(`File ${uploaded_file_id} completed without clips`);
+      revalidatePath("/dashboard");
+      return NextResponse.json({ success: true, message: "Processing completed" });
+    }
+
+    // Update processing status
+    await db.uploadedFile.update({
+      where: { id: uploaded_file_id },
+      data: {
+        status: status || "processing",
+      },
+    });
+
+    revalidatePath("/dashboard");
+    return NextResponse.json({ success: true, message: "Status updated" });
   } catch (error) {
     console.error("Webhook error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

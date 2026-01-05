@@ -11,18 +11,11 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import Link from "next/link";
-import {
-  loginSchema,
-  signupSchema,
-  type LoginFormValues,
-  type SignupFormValues,
-} from "~/schemas/auth";
-import { signUp } from "~/actions/auth";
+import { loginSchema, type LoginFormValues } from "~/schemas/auth";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -38,7 +31,9 @@ export function LoginForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginFormValues>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+  });
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
@@ -64,66 +59,91 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your email below to log in to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="flex flex-col gap-6">
+    <div
+      className={cn(
+        "mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl items-center px-4",
+        className
+      )}
+      {...props}
+    >
+      <div className="w-full">
+
+        <Card className="border-zinc-200 shadow-sm dark:border-zinc-800">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-xl font-semibold">
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Reelforge
+          </h1>
+              
+            </CardTitle>
+            <CardDescription className="text-zinc-500">
+              Enter your credentials to access your dashboard
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Email */}
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
-                  required
+                  placeholder="you@reelforge.ai"
                   {...register("email")}
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email.message}</p>
+                  <p className="text-xs text-red-500">
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
+
+              {/* Password */}
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
-                  required
                   {...register("password")}
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-500">
+                  <p className="text-xs text-red-500">
                     {errors.password.message}
                   </p>
                 )}
               </div>
 
+              {/* Error */}
               {error && (
-                <p className="rounded-md bg-red-50 p-3 text-sm text-red-500">
+                <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950">
                   {error}
-                </p>
+                </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {/* Submit */}
+              <Button
+                type="submit"
+                className="w-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? "Logging in..." : "Log in"}
               </Button>
-            </div>
-            <div className="mt-4 text-center text-sm">
-              Don&apos;t have an account?{" "}
-              <Link href="/signup" className="underline underline-offset-4">
-                Sign up
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+
+              {/* Footer */}
+              <p className="text-center text-sm text-zinc-500">
+                Don&apos;t have an account?{" "}
+                <Link
+                  href="/signup"
+                  className="font-medium text-zinc-900 underline-offset-4 hover:underline dark:text-zinc-100"
+                >
+                  Sign up
+                </Link>
+              </p>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

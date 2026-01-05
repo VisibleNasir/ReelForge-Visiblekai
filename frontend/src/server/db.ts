@@ -4,23 +4,29 @@ import { PrismaClient } from "@prisma/client";
 
 import { env } from "~/env";
 
-const createPrismaClient = () => {
-  const pool = new Pool({
-    connectionString: env.DATABASE_URL,
-  });
-  const adapter = new PrismaPg(pool);
-
-  return new PrismaClient({
-    adapter,
-    log:
-      env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  });
-};
-
 const globalForPrisma = globalThis as unknown as {
-  prisma: ReturnType<typeof createPrismaClient> | undefined;
+  prisma: PrismaClient | undefined;
 };
 
-export const db = globalForPrisma.prisma ?? createPrismaClient();
+export const db =
+  globalForPrisma.prisma ||
+  (() => {
+    const pool = new Pool({
+      connectionString: env.DATABASE_URL,
+    });
+    const adapter = new PrismaPg(pool);
 
-if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+    const client = new PrismaClient({
+      adapter,
+      log:
+        env.NODE_ENV === "development"
+          ? ["query", "error", "warn"]
+          : ["error"],
+    });
+
+    if (env.NODE_ENV !== "production") {
+      globalForPrisma.prisma = client;
+    }
+
+    return client;
+  })();

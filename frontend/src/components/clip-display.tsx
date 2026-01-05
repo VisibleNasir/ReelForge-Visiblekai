@@ -19,7 +19,8 @@ function ClipCard({ clip }: { clip: Clip }) {
         } else if (result.error) {
           console.error("Failed to get play url: " + result.error);
         }
-      } catch {
+      } catch (err) {
+        console.error("Error fetching clip URL:", err);
       } finally {
         setIsLoadingUrl(false);
       }
@@ -32,7 +33,7 @@ function ClipCard({ clip }: { clip: Clip }) {
     if (playUrl) {
       const link = document.createElement("a");
       link.href = playUrl;
-      link.style.display = "none";
+      link.download = `${clip.id}.mp4`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -60,7 +61,7 @@ function ClipCard({ clip }: { clip: Clip }) {
         )}
       </div>
       <div className="flex flex-col gap-2">
-        <Button onClick={handleDownload} variant="outline" size="sm">
+        <Button onClick={handleDownload} variant="outline" size="sm" disabled={!playUrl}>
           <Download className="mr-1.5 h-4 w-4" />
           Download
         </Button>
@@ -70,7 +71,7 @@ function ClipCard({ clip }: { clip: Clip }) {
 }
 
 export function ClipDisplay({ clips }: { clips: Clip[] }) {
-  if (clips.length === 0) {
+  if (!clips || clips.length === 0) {
     return (
       <p className="text-muted-foreground p-4 text-center">
         No clips generated yet.

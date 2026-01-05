@@ -59,7 +59,13 @@ export async function processVideo(uploadedFileId: string) {
     }
 
     const responseData = await response.json();
-    console.log("Modal response received:", responseData);
+    console.log("Modal response received:", JSON.stringify(responseData, null, 2));
+
+    // Check for error status in response
+    if (responseData.status === "failed" || responseData.error) {
+      console.error("Modal returned error:", responseData.error || responseData);
+      throw new Error(responseData.error || "Processing failed on Modal");
+    }
 
     // Handle different response types from Modal
     let clips = null;
