@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         where: { id: uploaded_file_id },
         data: { status: "failed" },
       });
-      revalidatePath("/dashboard");
+      revalidatePath("/user/dashboard");
       return NextResponse.json({ success: true, message: "Status updated to failed" });
     }
 
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       });
 
       console.log(`Successfully processed ${clips.length} clips`);
-      revalidatePath("/dashboard");
+      revalidatePath("/user/dashboard");
       return NextResponse.json({
         success: true,
         message: `Processed ${clips.length} clips`,
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         },
       });
       console.log(`File ${uploaded_file_id} completed without clips`);
-      revalidatePath("/dashboard");
+      revalidatePath("/user/dashboard");
       return NextResponse.json({ success: true, message: "Processing completed" });
     }
 
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    revalidatePath("/dashboard");
+    revalidatePath("/user/dashboard");
     return NextResponse.json({ success: true, message: "Status updated" });
   } catch (error) {
     console.error("Webhook error:", error);

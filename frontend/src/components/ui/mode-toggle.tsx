@@ -6,30 +6,42 @@ import { useTheme } from "next-themes";
 import { Button } from "./button";
 
 export function ModeToggle() {
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentTheme = resolvedTheme ?? theme;
+  const isDark = currentTheme === "dark";
 
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    setTheme(isDark ? "light" : "dark");
   };
+
+  if (!mounted) {
+    return <div className="h-10 w-10" aria-hidden="true" />;
+  }
 
   return (
     <Button
-      variant="outline"
+      type="button"
+      variant="ghost"
       size="icon"
+      aria-label="Toggle theme"
+      className="relative h-10 w-10"
       onClick={toggleTheme}
-      className="relative h-10 w-10 p-0"
     >
       <Sun
-        className={`
-          absolute h-5 w-5 transition-all duration-300 
-          ${theme === "dark" ? "scale-0 rotate-90 opacity-0" : "scale-100 rotate-0 opacity-100"}
-        `}
+        className={`absolute h-5 w-5 transition-all duration-300 ${
+          isDark ? "scale-0 rotate-90 opacity-0" : "scale-100 rotate-0 opacity-100"
+        }`}
       />
       <Moon
-        className={`
-          absolute h-5 w-5 transition-all duration-300
-          ${theme === "dark" ? "scale-100 rotate-0 opacity-100" : "scale-0 -rotate-90 opacity-0"}
-        `}
+        className={`absolute h-5 w-5 transition-all duration-300 ${
+          isDark ? "scale-100 rotate-0 opacity-100" : "scale-0 -rotate-90 opacity-0"
+        }`}
       />
       <span className="sr-only">Toggle theme</span>
     </Button>

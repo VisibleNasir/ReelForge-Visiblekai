@@ -8,7 +8,7 @@ import { env } from "~/env";
 import { revalidatePath } from "next/cache";
 
 export async function getSubtitleUrl(
-  uploadedFileId: string,
+  uploadedFileId: string,   
   type: "srt" | "vtt"
 ) {
   const session = await auth();
@@ -161,7 +161,7 @@ export async function burnSubtitles(uploadedFileId: string) {
         where: { id: uploadedFile.id },
         data: { status: "processing" },
       });
-      revalidatePath("/dashboard");
+      revalidatePath("/user/dashboard");
       return { success: true, message: "Burn in progress" };
     }
 
@@ -173,14 +173,14 @@ export async function burnSubtitles(uploadedFileId: string) {
       },
     });
 
-    revalidatePath("/dashboard");
+    revalidatePath("/user/dashboard");
     return { success: true };
   } catch (error) {
     await db.uploadedFile.update({
       where: { id: uploadedFileId },
       data: { status: "failed" },
     });
-    revalidatePath("/dashboard");
+    revalidatePath("/user/dashboard");
     return {
       success: false,
       error: error instanceof Error ? error.message : "Subtitle burn failed",

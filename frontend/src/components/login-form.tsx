@@ -49,7 +49,7 @@ export function LoginForm({
       if (signInResult?.error) {
         setError("Invalid email or password.");
       } else {
-        router.push("/dashboard");
+        router.push("/user/dashboard");
       }
     } catch {
       setError("An unexpected error occured");

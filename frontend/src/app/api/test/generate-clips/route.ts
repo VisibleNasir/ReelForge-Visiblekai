@@ -2,17 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { env } from "~/env";
 import { db } from "~/server/db";
 
-/**
- * TEST ENDPOINT - Simulates Modal sending generated clips back
- * 
- * For testing only - sends sample clips to the webhook
- * 
- * Usage: POST http://localhost:3000/api/test/generate-clips
- * Body: {
- *   "uploaded_file_id": "...",
- *   "user_id": "..."
- * }
- */
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -25,7 +15,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify the uploaded file exists and belongs to the user
     const uploadedFile = await db.uploadedFile.findFirst({
       where: {
         id: uploaded_file_id,
@@ -40,7 +29,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate fake clips (in reality, Modal would create these)
     const fakeClips = [
       {
         s3Key: `${uploadedFile.s3Key.replace('/original.mp4', '')}/clip-1.mp4`,
@@ -53,7 +41,6 @@ export async function POST(request: NextRequest) {
       },
     ];
 
-    // Call the webhook to save clips
     const webhookUrl = `${env.BASE_URL}/api/webhook/modal`;
     const response = await fetch(webhookUrl, {
       method: "POST",
