@@ -30,7 +30,7 @@ export function ModeToggle() {
       variant="ghost"
       size="icon"
       aria-label="Toggle theme"
-      className="relative h-10 w-10"
+      className="relative rounded-full h-10 w-10"
       onClick={toggleTheme}
     >
       <Sun

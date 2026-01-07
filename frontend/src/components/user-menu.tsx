@@ -19,7 +19,7 @@ export function UserMenu() {
 
   return (
     <div className="flex items-center gap-3">
-        <span className="text-sm">Hello, {session.user?.name}</span>
+        <p className="text-sm bg-zinc-500 p-2 rounded-full w-10 h-10 text-center flex items-center justify-center">{session.user.email[0].toUpperCase() || "U"}</p>
       <button
         onClick={() => signOut()}
         className="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100"

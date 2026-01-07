@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Loader2, Upload, UploadCloud, UploadIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { processVideo } from "~/actions/generation";
@@ -58,7 +58,6 @@ export function DashboardClient({
   }, [uploadedFiles, selectedFileId]);
 
 
-  // Auto-refresh when files are processing
   useEffect(() => {
     const processingFiles = uploadedFiles.some(
       (f) => f.status === "processing" || f.status === "uploading"
@@ -67,7 +66,7 @@ export function DashboardClient({
     if (processingFiles) {
       const interval = setInterval(() => {
         router.refresh();
-      }, 5000); // Every 5 seconds for better UX
+      }, 5000); 
 
       return () => clearInterval(interval);
     }
@@ -198,7 +197,6 @@ export function DashboardClient({
 
 };
 
-  // Filter files by type based on s3Key pattern
   const regularUploads = uploadedFiles.filter(file => file.s3Key.includes('/original.'));
   const subtitleBurns = uploadedFiles.filter(file => file.s3Key.includes('/subtitle.'));
 
@@ -212,17 +210,16 @@ export function DashboardClient({
           <TabsList className="grid w-full max-w-sm grid-cols-3 bg-zinc-100 p-1 dark:bg-zinc-900">
             <TabsTrigger value="upload">Upload</TabsTrigger>
             <TabsTrigger value="subtitle">Burn subtitle</TabsTrigger>
-            <TabsTrigger value="my-clips">Clips</TabsTrigger>
+            <TabsTrigger value="clips">Clips</TabsTrigger>
           </TabsList>
 
-          {/* Upload */}
+          
           <TabsContent value="upload" >
             <Card className="border-zinc-200 dark:border-zinc-950">
               <CardHeader className="space-y-1">
                 <CardTitle>Upload Video</CardTitle>
                 <CardDescription>
-                  Upload your podcast or long video. We’ll automatically extract
-                  clips and generate subtitles.
+                  Upload your podcast or long form video, and we will create vertical Content/Reels for you detecting viral movements. 
                 </CardDescription>
               </CardHeader>
 
@@ -231,7 +228,7 @@ export function DashboardClient({
                   {...getRootProps()}
                   className={`
                     flex cursor-pointer flex-col items-center justify-center
-                     border-2 border-dashed p-4 text-center transition
+                     border-2  p-4 text-center transition
                     ${isDragActive
                       ? "border-zinc-900 bg-zinc-100 dark:border-white dark:bg-zinc-900"
                       : "border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"}
@@ -239,12 +236,12 @@ export function DashboardClient({
                   `}
                 >
                   <input {...getInputProps()} />
-                  <UploadCloud className="mb-4 h-14 w-14 text-zinc-400" />
+                  <Upload className="mb-4 h-14 w-14 text-zinc-400" />
                   <p className="text-base font-medium">
                     Drag & drop your video here
                   </p>
                   <p className="mt-1 text-sm text-zinc-500">
-                    MP4, MOV, AVI — up to 500MB
+                    MP4 - up to 500MB
                   </p>
                 </div>
 
@@ -288,7 +285,7 @@ export function DashboardClient({
                       </Button>
                     </div>
 
-                    <div className="overflow-hidden  border">
+                    <div className="overflow-hidden  ">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -317,7 +314,7 @@ export function DashboardClient({
                                 {getStatusBadge(item.status)}
                               </TableCell>
                               <TableCell className="text-right">
-                                {item.clipsCount || "—"}
+                                {item.clipsCount || "0"}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -330,22 +327,6 @@ export function DashboardClient({
             </Card>
           </TabsContent>
 
-          {/* Clips */}
-          <TabsContent value="my-clips">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Clips</CardTitle>
-                <CardDescription>
-                  AI-generated clips with subtitles, ready to publish.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ClipDisplay clips={clips} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Subtitle Burn */}
           <TabsContent value="subtitle">
             <div className="space-y-8">
               <Card className="border-zinc-200 dark:border-zinc-800">
@@ -361,7 +342,7 @@ export function DashboardClient({
                     {...getSubtitleRootProps()}
                     className={`
                       flex cursor-pointer flex-col items-center justify-center
-                      rounded-xl border-2 border-dashed p-10 text-center transition
+                       border-2 p-10 text-center transition
                       ${isSubtitleDragActive
                         ? "border-zinc-900 bg-zinc-100 dark:border-white dark:bg-zinc-900"
                         : "border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"}
@@ -369,9 +350,9 @@ export function DashboardClient({
                     `}
                   >
                     <input {...getSubtitleInputProps()} />
-                    <UploadCloud className="mb-4 h-12 w-12 text-zinc-400" />
+                    <Upload className="mb-4 h-12 w-12 text-zinc-400" />
                     <p className="text-base font-medium">Drop a video to burn subtitles</p>
-                    <p className="mt-1 text-sm text-zinc-500">MP4, MOV, AVI — up to 500MB</p>
+                    <p className="mt-1 text-sm text-zinc-500">MP4 - up to 500MB</p>
                   </div>
 
                   {subtitleFiles.length > 0 && (
@@ -457,6 +438,20 @@ export function DashboardClient({
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="clips">
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Clips</CardTitle>
+                <CardDescription>
+                  AI-generated clips with subtitles, ready to publish.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ClipDisplay clips={clips} />
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

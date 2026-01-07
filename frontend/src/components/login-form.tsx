@@ -61,7 +61,7 @@ export function LoginForm({
   return (
     <div
       className={cn(
-        "mx-auto flex min-h-[calc(100vh-4rem)] max-w-3xl items-center px-4",
+        "mx-auto flex max-w-3xl items-center px-4",
         className
       )}
       {...props}
@@ -77,19 +77,18 @@ export function LoginForm({
               
             </CardTitle>
             <CardDescription className="text-zinc-500">
-              Enter your credentials to access your dashboard
+              Enter your email and password to log in
             </CardDescription>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Email */}
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@reelforge.ai"
+                  placeholder="your email"
                   {...register("email")}
                 />
                 {errors.email && (
@@ -99,7 +98,6 @@ export function LoginForm({
                 )}
               </div>
 
-              {/* Password */}
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -114,23 +112,20 @@ export function LoginForm({
                 )}
               </div>
 
-              {/* Error */}
               {error && (
                 <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950">
                   {error}
                 </div>
               )}
 
-              {/* Submit */}
               <Button
                 type="submit"
-                className="w-full bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
+                className="w-full bg-zinc-900 text-zinc-900 hover:bg-zinc-800 dark:bg-zinc-400 "
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Logging in..." : "Log in"}
               </Button>
 
-              {/* Footer */}
               <p className="text-center text-sm text-zinc-500">
                 Don&apos;t have an account?{" "}
                 <Link

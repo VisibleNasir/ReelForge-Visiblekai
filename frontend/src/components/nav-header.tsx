@@ -19,26 +19,22 @@ const NavHeader = ({ credits, email }: { credits: number; email: string }) => {
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Logo */}
         <Link
-          href="/dashboard"
+          href="/"
           className="flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
         >
           ReelForge
         </Link>
 
-        {/* Right section */}
         <div className="flex items-center gap-4">
           <Badge variant="secondary" className="px-3 py-1 text-sm">
             Credits: {credits}
           </Badge>
 
-          {/* Mode Toggle */}
           <div className="flex items-center">
             <ModeToggle />
           </div>
 
-          {/* User menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button

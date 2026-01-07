@@ -26,7 +26,7 @@ export async function signUp(data: SignupFormValues): Promise<SignupResult> {
     if (existingUser) {
       return {
         success: false,
-        error: "Email already in use",
+        error: "User already exists with this email",
       };
     }
 

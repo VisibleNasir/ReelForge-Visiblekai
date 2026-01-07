@@ -21,7 +21,6 @@ export default async function DashboardLayout({
   });
 
   if (!user) {
-    // User session exists but user record doesn't - redirect to signup
     redirect("/signup");
   }
 
