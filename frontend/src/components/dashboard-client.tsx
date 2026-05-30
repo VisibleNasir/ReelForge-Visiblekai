@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Loader2, Upload, UploadCloud, UploadIcon } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { processVideo } from "~/actions/generation";
