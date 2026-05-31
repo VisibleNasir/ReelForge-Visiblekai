@@ -777,10 +777,12 @@ def main():
     reelforgepodcast_clipper=ReelForgePodcastClipper()
 
     # video processing endpoint
-    url = reelforgepodcast_clipper.process_video.web_url
+    url = reelforgepodcast_clipper.process_video.get_web_url()
+    if not url:
+        raise RuntimeError("process_video is not configured as a web endpoint")
 
     # subtitle burning endpoint
-    # url_burn = reelforgepodcast_clipper.burn_subtitles.web_url
+    # url_burn = reelforgepodcast_clipper.burn_subtitles.get_web_url()
 
     payload={
         "s3_key": "test1/testcut.mp4"
