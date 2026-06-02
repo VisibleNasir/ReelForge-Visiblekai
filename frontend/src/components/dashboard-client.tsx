@@ -26,7 +26,8 @@ import { Badge } from "./ui/badge";
 import { useRouter } from "next/navigation";
 import { ClipDisplay } from "./clip-display";
 import { SubtitleStudio } from "./subtitle-studio";
-
+import { Input } from "./ui/input";
+import { Youtube, Link2 } from "lucide-react";
 interface Clip {
   id: string;
 }
@@ -52,7 +53,10 @@ export function DashboardClient({
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
-
+const [youtubeUrl, setYoutubeUrl] = useState("");
+const [youtubeLoading, setYoutubeLoading] = useState(false);
+const [thumbnailLoading, setThumbnailLoading] = useState(false);
+const [generatedThumbnails, setGeneratedThumbnails] = useState<string[]>([]);
   useEffect(() => {
     if (!selectedFileId && uploadedFiles.length > 0) {
       setSelectedFileId(uploadedFiles[0]?.id ?? null);
@@ -71,7 +75,29 @@ export function DashboardClient({
       return () => clearInterval(interval);
     }
   }, [uploadedFiles, router]);
+const generateThumbnail = async () => {
+  try {
+    setThumbnailLoading(true);
 
+    const response = await fetch("/api/generate-thumbnail", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        clipId: selectedFileId,
+      }),
+    });
+
+    const data = await response.json();
+
+    setGeneratedThumbnails(data.images);
+  } catch (error) {
+    toast.error("Failed to generate thumbnails");
+  } finally {
+    setThumbnailLoading(false);
+  }
+};
   const handleRefresh = async () => {
     setRefreshing(true);
     router.refresh();
@@ -85,7 +111,52 @@ export function DashboardClient({
     maxFiles: 1,
     disabled: uploading,
   });
+const titles = [
+  "🔥 This Podcast Moment Changed Everything",
+  "🔥 Nobody Expected This Answer",
+  "🔥 The Business Lesson Nobody Talks About",
+  "🔥 Why Most People Fail At This",
+  "🔥 This Advice Could Save You Years",
+];
 
+const hashtags = [
+  "#podcast",
+  "#podcastclips",
+  "#viral",
+  "#motivation",
+  "#business",
+  "#entrepreneur",
+  "#mindset",
+  "#success",
+  "#reels",
+  "#shorts",
+];
+
+const thumbnailIdeas = [
+  {
+    title: "Shock Value",
+    description:
+      "😲 Surprised face + red arrow + bold text 'Nobody Saw This Coming'",
+  },
+  {
+    title: "Money Hook",
+    description:
+      "💰 Dollar sign + podcast mic + text 'Million Dollar Mistake'",
+  },
+  {
+    title: "Curiosity",
+    description:
+      "🤯 Guest reaction + zoom effect + text 'What Happened Next?'",
+  },
+];
+
+const captions = [
+  "Most people focus on the wrong things.\n\nIn this clip, the guest explains the mindset shift that changes everything.\n\nWatch until the end 👇",
+
+  "This might be the best advice you'll hear today.\n\nSimple. Practical. Powerful.\n\nWould you agree?",
+
+  "The biggest mistake beginners make is revealed in this podcast clip.\n\nSave this for later.",
+];
   const {
     getRootProps: getSubtitleRootProps,
     getInputProps: getSubtitleInputProps,
@@ -134,7 +205,51 @@ export function DashboardClient({
       setUploading(false);
     }
   };
+const handleYoutubeProcess = async () => {
+  if (!youtubeUrl.trim()) {
+    toast.error("Please enter a YouTube URL");
+    return;
+  }
 
+  setYoutubeLoading(true);
+
+  try {
+    const response = await fetch("/api/youtube", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url: youtubeUrl,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Failed to process video");
+    }
+
+    const { uploadedFileId } = await response.json();
+
+    setSelectedFileId(uploadedFileId);
+    setYoutubeUrl("");
+
+    toast.success("YouTube video submitted", {
+      description:
+        "Video is being downloaded and processed into viral clips.",
+    });
+
+    router.refresh();
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Failed to process video"
+    );
+  } finally {
+    setYoutubeLoading(false);
+  }
+};
   const handleSubtitleUpload = async () => {
     if (subtitleFiles.length === 0) return;
     const file = subtitleFiles[0]!;
@@ -199,6 +314,9 @@ export function DashboardClient({
 
         <Tabs defaultValue="upload" className="w-full">
           <TabsList className="inline-flex h-14 items-center justify-center rounded-2xl bg-zinc-900/80 p-1.5 backdrop-blur-xl border border-zinc-800">
+            <TabsTrigger value="ytlink" className="rounded-xl px-8 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-lg">
+              Youtube link
+            </TabsTrigger>
             <TabsTrigger value="upload" className="rounded-xl px-8 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-lg">
               Upload Video
             </TabsTrigger>
@@ -208,10 +326,79 @@ export function DashboardClient({
             <TabsTrigger value="clips" className="rounded-xl px-8 py-2.5 text-sm font-medium transition-all data-[state=active]:bg-white data-[state=active]:text-zinc-900 data-[state=active]:shadow-lg">
               My Clips
             </TabsTrigger>
+            <TabsTrigger value="content">
+  Content Studio
+</TabsTrigger>
           </TabsList>
 
+          
+          <TabsContent value="ytlink" className="mt-10">
+<Card className="border border-zinc-800 bg-zinc-950/50">
+  <CardContent className="p-8">
+
+    <div className="mb-6 flex items-center gap-4">
+      <div className="rounded-xl bg-red-500/10 p-3">
+        <Youtube className="h-8 w-8 text-red-500" />
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold">
+          Import From YouTube
+        </h3>
+
+        <p className="text-sm text-zinc-400">
+          Paste a podcast or long-form video link
+        </p>
+      </div>
+    </div>
+
+    <div className="flex flex-col gap-3 md:flex-row">
+
+      <Input
+        value={youtubeUrl}
+        onChange={(e) => setYoutubeUrl(e.target.value)}
+        placeholder="https://youtube.com/watch?v=..."
+        className="h-14 border-zinc-700 bg-zinc-900"
+      />
+
+      <Button
+        size="lg"
+        onClick={handleYoutubeProcess}
+        disabled={youtubeLoading}
+        className="h-14 bg-gradient-to-r from-red-600 to-red-500"
+      >
+        {youtubeLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Processing...
+          </>
+        ) : (
+          <>
+            <Link2 className="mr-2 h-4 w-4" />
+            Generate Clips
+          </>
+        )}
+      </Button>
+
+    </div>
+
+    <div className="mt-4 flex flex-wrap gap-2 text-xs text-zinc-500">
+      <span>✓ YouTube Podcasts</span>
+      <span>•</span>
+      <span>✓ Interviews</span>
+      <span>•</span>
+      <span>✓ Long-form Videos</span>
+      <span>•</span>
+      <span>✓ Automatic Clip Detection</span>
+    </div>
+
+  </CardContent>
+</Card>
+</TabsContent>
           {/* Upload Tab */}
           <TabsContent value="upload" className="mt-10">
+            {/* YouTube URL Section */}
+
             <Card className="border-0 bg-zinc-900/70 backdrop-blur-2xl">
               <CardHeader className="pb-8">
                 <CardTitle className="text-3xl">Create Viral Clips</CardTitle>
@@ -344,6 +531,187 @@ export function DashboardClient({
               </CardContent>
             </Card>
           </TabsContent>
+          <TabsContent value="content" className="mt-10">
+  <div className="grid gap-6">
+
+    {/* Titles */}
+
+    <Card className="border-zinc-800 bg-zinc-900/70">
+      <CardHeader>
+        <CardTitle>🔥 AI Title Generator</CardTitle>
+        <CardDescription>
+          Ready-to-use viral titles
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-3">
+        {titles.map((title, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+          >
+            <span>{title}</span>
+
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                navigator.clipboard.writeText(title);
+                toast.success("Title copied");
+              }}
+            >
+              Copy
+            </Button>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+
+    {/* Hashtags */}
+
+    <Card className="border-zinc-800 bg-zinc-900/70">
+      <CardHeader>
+        <CardTitle># Hashtag Generator</CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <div className="flex flex-wrap gap-2">
+          {hashtags.map((tag) => (
+            <Badge
+              key={tag}
+              className="cursor-pointer"
+              onClick={() => {
+                navigator.clipboard.writeText(tag);
+                toast.success("Hashtag copied");
+              }}
+            >
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+
+    {/* Thumbnail Ideas */}
+
+    <Card className="border-zinc-800 bg-zinc-900/70">
+  <CardHeader>
+    <CardTitle>🎨 AI Thumbnail Generator</CardTitle>
+    <CardDescription>
+      Generate YouTube-ready thumbnails using AI
+    </CardDescription>
+  </CardHeader>
+
+  <CardContent>
+
+    <Button
+      onClick={generateThumbnail}
+      disabled={thumbnailLoading}
+      className="mb-6"
+    >
+      {thumbnailLoading ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Generating...
+        </>
+      ) : (
+        "Generate Thumbnails"
+      )}
+    </Button>
+
+    <div className="grid gap-4 md:grid-cols-2">
+      {generatedThumbnails.map((image, index) => (
+        <div
+          key={index}
+          className="overflow-hidden rounded-xl border border-zinc-800"
+        >
+          <img
+            src={image}
+            alt={`Thumbnail ${index + 1}`}
+            className="w-full"
+          />
+
+          <div className="p-3">
+            <Button className="w-full">
+              Download
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+
+  </CardContent>
+</Card>
+
+    {/* Captions */}
+
+    <Card className="border-zinc-800 bg-zinc-900/70">
+      <CardHeader>
+        <CardTitle>✍️ Caption Generator</CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {captions.map((caption, index) => (
+          <div
+            key={index}
+            className="rounded-xl border border-zinc-800 bg-zinc-950 p-4"
+          >
+            <pre className="whitespace-pre-wrap text-sm text-zinc-300 font-sans">
+              {caption}
+            </pre>
+
+            <Button
+              className="mt-4"
+              size="sm"
+              onClick={() => {
+                navigator.clipboard.writeText(caption);
+                toast.success("Caption copied");
+              }}
+            >
+              Copy Caption
+            </Button>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+
+    {/* SEO */}
+
+    <Card className="border-zinc-800 bg-zinc-900/70">
+      <CardHeader>
+        <CardTitle>🚀 SEO Package</CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+          <p className="font-medium mb-2">
+            Suggested Keywords
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {[
+              "podcast",
+              "business",
+              "startup",
+              "entrepreneur",
+              "motivation",
+              "success",
+              "viral clips",
+              "podcast shorts",
+            ].map((keyword) => (
+              <Badge key={keyword}>
+                {keyword}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+      </CardContent>
+    </Card>
+
+  </div>
+</TabsContent>
         </Tabs>
       </div>
     </div>
