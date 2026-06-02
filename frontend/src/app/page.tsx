@@ -4,55 +4,125 @@ import NavHeader from "~/components/nav-header";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
-export  default async function HomePage() {
+export default async function HomePage() {
   const session = await auth();
 
   if (!session?.user?.id) {
     redirect("/login");
   }
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      select: { credits: true, email: true },
-    });
+
+  const user = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { credits: true, email: true },
+  });
+
   return (
-    <div className="h-screen ">
-      <NavHeader credits={user.credits} email={user.email} />
+    <div className="min-h-screen bg-zinc-950 text-white">
+      <NavHeader credits={user?.credits} email={user?.email} />
 
-      <div className="flex flex-col  justify-center w-full h-[40rem]">
-        <div className="   px-6 py-20 text-center">
-        <h2 className="text-4xl font-bold tracking-tight leading-tight">
-          Podcast Clips.
-          <br />
-          <span className="text-zinc-600 dark:text-zinc-400">
-            Done Automatically.
-          </span>
-        </h2>
+      {/* Hero Section */}
+      <section className="pt-24 pb-20 px-6">
+        <div className="max-w-5xl mx-auto text-center">
+         
 
-        <p className="mt-6 text-lg text-zinc-600 dark:text-zinc-400">
-          Generate vertical clips, detect viral moments, and burn subtitles
-        </p>
+          <h1 className="text-6xl md:text-7xl font-bold tracking-tighter leading-tight mb-6">
+            Podcast Clips.<br />
+            <span className="bg-gradient-to-r from-zinc-200 via-white to-zinc-400 bg-clip-text text-transparent">
+              Done Automatically.
+            </span>
+          </h1>
 
-        <div className="mt-10 flex justify-center gap-4">
+          <p className="mt-6 text-xl md:text-2xl text-zinc-400 max-w-2xl mx-auto">
+            Generate scroll-stopping vertical clips, detect viral moments, and burn beautiful subtitles — all in minutes.
+          </p>
 
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/user/dashboard"
+              className="w-full sm:w-auto px-10 py-4 bg-white text-black font-semibold rounded-2xl hover:bg-zinc-200 transition text-lg shadow-lg shadow-white/10"
+            >
+              Generate Clips Now
+            </Link>
+
+            <Link
+              href="#features"
+              className="w-full sm:w-auto px-8 py-4 border border-zinc-700 hover:border-zinc-500 font-medium rounded-2xl transition text-lg flex items-center justify-center gap-2"
+            >
+              See How It Works
+            </Link>
+          </div>
+
+          <p className="text-zinc-500 mt-4 text-sm">
+            No credit card required • {user?.credits} credits available
+          </p>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-24 bg-zinc-900 border-t border-zinc-800">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2 className="text-4xl font-bold text-center mb-16">
+            Built for Podcast Creators Who Want to Grow
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 hover:border-indigo-500/50 transition-all group">
+              <div className="w-14 h-14 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                ✂️
+              </div>
+              <h3 className="text-2xl font-semibold mb-3">Smart Auto-Clipping</h3>
+              <p className="text-zinc-400">
+                Automatically detects the most engaging moments from long podcasts and turns them into vertical clips.
+              </p>
+            </div>
+
+            <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 hover:border-indigo-500/50 transition-all group">
+              <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                🔥
+              </div>
+              <h3 className="text-2xl font-semibold mb-3">Viral Moment Detection</h3>
+              <p className="text-zinc-400">
+                Our AI finds emotional peaks, laughs, insights, and controversial takes — the moments that go viral.
+              </p>
+            </div>
+
+            <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-8 hover:border-indigo-500/50 transition-all group">
+              <div className="w-14 h-14 bg-amber-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                📝
+              </div>
+              <h3 className="text-2xl font-semibold mb-3">Auto Subtitles</h3>
+              <p className="text-zinc-400">
+                Beautiful, perfectly timed subtitles with multiple styles. Optimized for Reels, TikTok & YouTube Shorts.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-b from-zinc-900 to-zinc-950">
+        <div className="max-w-3xl mx-auto text-center px-6">
+          <h2 className="text-4xl font-bold mb-6">
+            Ready to turn your podcast into content that grows itself?
+          </h2>
+          <p className="text-zinc-400 text-lg mb-10">
+            Join hundreds of creators already using ReelForge to 10x their reach.
+          </p>
           <Link
-            href="/user/dashboard"  
-            className="rounded-lg text-zinc-100 border border-zinc-300 dark:border-zinc-700 px-6 py-3 text-sm font-medium bg-zinc-900 hover:bg-zinc-950 dark:bg-zinc-100 dark:text-zinc-950 transition"
+            href="/user/dashboard"
+            className="inline-block px-12 py-5 bg-white text-black font-semibold rounded-2xl text-xl hover:bg-zinc-200 transition"
           >
-            Generate Clips
-          </Link>
-
-          <Link
-            href="/user/dashboard"  
-            className="rounded-lg text-zinc-950 border border-zinc-300 dark:border-zinc-700 px-6 py-3 text-sm font-medium  hover:bg-zinc-950  dark:text-zinc-100 transition"
-          >
-            Burn subtitles
+            Start Generating Clips →
           </Link>
         </div>
-      </div>
-      </div>
-      
+      </section>
 
-      
+      {/* Footer */}
+      <footer className="border-t border-zinc-800 py-12 bg-zinc-950">
+        <div className="max-w-6xl mx-auto px-6 text-center text-zinc-500 text-sm">
+          © 2026 ReelForge • Built for creators who want to focus on talking, not editing.
+        </div>
+      </footer>
     </div>
   );
 }
