@@ -12,115 +12,136 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
 // User model for Next Auth
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String   @unique
-    emailVerified DateTime?
-    password      String
-    credits       Int @default(10)
-    image         String?
-    accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  credits       Int       @default(10)
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  posts         Post[]
+  payments      Payment[]
 
-    uploadedFiles UploadedFile[]
-    clips Clip[]
-    subtitleJobs SubtitleJob[]
+  uploadedFiles UploadedFile[]
+  clips         Clip[]
+  subtitleJobs  SubtitleJob[]
 }
+
 // post model
 model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
 
-    @@index([name])
+  @@index([name])
 }
+
 model SubtitleJob {
-  id           String   @id @default(uuid())
-  videoS3Key   String
+  id            String   @id @default(uuid())
+  videoS3Key    String
   subtitleS3Key String?
-  status       String   // queued | processing | completed | failed
-  createdAt    DateTime @default(now())
-  createdBy    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId       String
+  status        String // queued | processing | completed | failed
+  createdAt     DateTime @default(now())
+  createdBy     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
 }
-
 
 // Necessary for Next auth
 model Account {
-    id                       String  @id @default(cuid())
-    userId                   String
-    type                     String
-    provider                 String
-    providerAccountId        String
-    refresh_token            String? 
-    access_token             String? 
-    expires_at               Int?
-    token_type               String?
-    scope                    String?
-    id_token                 String? 
-    session_state            String?
-    user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-    refresh_token_expires_in Int?
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  access_token             String?
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refresh_token_expires_in Int?
 
-    @@unique([provider, providerAccountId])
+  @@unique([provider, providerAccountId])
 }
 
 model Session {
-    id           String   @id @default(cuid())
-    sessionToken String   @unique
-    userId       String
-    expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-
-
 model UploadedFile {
-    id String @id @default(cuid())
-    s3Key String
-    displayName String?
-    uploaded Boolean @default(false)
-    status String @default("queued") 
-    subtitleSrt String?
-    subtitleVtt String?
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  s3Key       String
+  displayName String?
+  uploaded    Boolean  @default(false)
+  status      String   @default("queued")
+  subtitleSrt String?
+  subtitleVtt String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-    clips Clip[]
+  clips Clip[]
 
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
 
-    @@index([s3Key])
+  @@index([s3Key])
 }
 
 model Clip {
-    id String @id @default(cuid())
-    s3Key String
+  id    String @id @default(cuid())
+  s3Key String
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-    uploadedFile UploadedFile? @relation(fields: [uploadedFileId], references: [id], onDelete: Cascade)
-    uploadedFileId String?
+  uploadedFile   UploadedFile? @relation(fields: [uploadedFileId], references: [id], onDelete: Cascade)
+  uploadedFileId String?
 
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
 
-    @@index([s3Key])
+  @@index([s3Key])
 }
 
 model VerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
+  identifier String
+  token      String   @unique
+  expires    DateTime
 
-    @@unique([identifier, token])
+  @@unique([identifier, token])
+}
+
+model Payment {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  amount  Int
+  credits Int
+  plan    String
+  status  String @default("SUCCESS")
+
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([razorpayPaymentId])
 }

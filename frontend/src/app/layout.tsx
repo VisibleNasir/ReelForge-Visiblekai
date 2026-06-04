@@ -21,8 +21,17 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Razorpay Payment Script */}
+        <script 
+          src="https://checkout.razorpay.com/v1/checkout.js" 
+          async 
+        />
+      </head>
       <body className="bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 selection:bg-zinc-500">
-        <SessionProvider> <Providers>{children}</Providers></SessionProvider>
+        <SessionProvider> 
+          <Providers>{children}</Providers>
+        </SessionProvider>
       </body>
     </html>
   );

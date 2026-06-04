@@ -4,6 +4,7 @@ import NavHeader from "~/components/nav-header";
 import { GlowingStarsBackgroundCard } from "~/components/ui/glowing-stars";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
+import PricingSection from '~/components/PricingSection';
 
 // Import Glowing Stars Component
 export default async function HomePage() {
@@ -109,6 +110,10 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+    {/* Plan Section */}
+    <PricingSection />
+
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-b from-zinc-900 to-zinc-950 relative z-10">

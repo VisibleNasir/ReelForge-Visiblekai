@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import {
@@ -16,6 +17,28 @@ import { signOut } from "next-auth/react";
 import { ModeToggle } from "./ui/mode-toggle";
 
 const NavHeader = ({ credits, email }: { credits: number; email: string }) => {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Agar component client pe nahi mounted hai to simple fallback render karo
+  if (!isMounted) {
+    return (
+      <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/80">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
+          >
+            ReelForge
+          </Link>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/80">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
@@ -69,11 +92,8 @@ const NavHeader = ({ credits, email }: { credits: number; email: string }) => {
 
               <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
 
-              <DropdownMenuItem
-                asChild
-                className="cursor-pointer rounded-md text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              >
-                <Link href="/dashboard/billing">Billing</Link>
+              <DropdownMenuItem asChild className="cursor-pointer rounded-md text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <Link href="/billing">Billing</Link>
               </DropdownMenuItem>
 
               <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
