@@ -1,5 +1,5 @@
-import { Star, Quote, TrendingUp, Users, Video } from "lucide-react";
-
+import { Star, Quote, TrendingUp, Users, Video, Sparkles } from "lucide-react";
+import RippleGrid from "../../../components/RippleGrid";
 export default function TestimonialsPage() {
   const testimonials = [
     {
@@ -77,59 +77,66 @@ export default function TestimonialsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-zinc-900 text-white">
-      <div className="mx-auto max-w-7xl px-6 py-24">
+    <main className="relative min-h-screen overflow-hidden bg-black text-white">
+      <div className="absolute inset-0">
+        <RippleGrid />
+      </div>
 
-        {/* Hero */}
-        <div className="text-center">
-          <div className="inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-sm text-violet-300">
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/85 to-black" />
+      <div className="absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-violet-600/20 blur-[130px]" />
+      <div className="absolute bottom-0 right-0 h-[500px] w-[700px] rounded-full bg-fuchsia-600/20 blur-[130px]" />
+
+      <section className="relative z-10 mx-auto max-w-7xl px-6 py-24">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-5 py-2 text-sm text-violet-200 backdrop-blur-xl">
+            <Sparkles className="h-4 w-4" />
             Customer Success Stories
           </div>
 
-          <h1 className="mt-6 text-5xl font-bold tracking-tight md:text-7xl">
-            Loved By
-            <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-              {" "}Creators
+          <h1 className="mt-8 text-5xl font-black tracking-tight md:text-7xl">
+            Creators are growing faster with{" "}
+            <span className="bg-gradient-to-r from-violet-400 via-fuchsia-400 to-pink-400 bg-clip-text text-transparent">
+              ReelForge
             </span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-3xl text-lg text-zinc-400">
-            Thousands of creators, podcasters, agencies, and businesses use
-            ReelForge to transform long-form content into high-performing
-            short-form videos.
+          <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-zinc-400">
+            Podcasters, agencies, YouTubers, and founders use ReelForge to turn
+            long-form videos into viral short-form content in minutes.
           </p>
         </div>
 
-        {/* Stats */}
         <div className="mt-20 grid gap-6 md:grid-cols-3">
           {stats.map((stat) => (
             <div
               key={stat.label}
-              className="rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 text-center backdrop-blur-xl"
+              className="group rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-center shadow-2xl backdrop-blur-2xl transition-all duration-300 hover:-translate-y-2 hover:border-violet-500/40 hover:bg-violet-500/10"
             >
-              <stat.icon className="mx-auto h-10 w-10 text-violet-400" />
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 ring-1 ring-violet-500/30">
+                <stat.icon className="h-8 w-8 text-violet-300" />
+              </div>
 
-              <h3 className="mt-4 text-4xl font-bold">
-                {stat.value}
-              </h3>
+              <h3 className="mt-5 text-5xl font-black">{stat.value}</h3>
 
-              <p className="mt-2 text-zinc-400">
-                {stat.label}
-              </p>
+              <p className="mt-2 text-zinc-400">{stat.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Testimonials Grid */}
-        <div className="mt-20 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {testimonials.map((testimonial) => (
+        <div className="mt-24 grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+          {testimonials.map((testimonial, index) => (
             <div
               key={testimonial.name}
-              className="group rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 backdrop-blur-xl transition-all duration-300 hover:border-violet-500/30 hover:bg-zinc-900/70"
+              className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-zinc-950/70 p-8 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:border-fuchsia-500/40 ${
+                index === 1 || index === 4 ? "xl:-translate-y-8" : ""
+              }`}
             >
-              <Quote className="mb-6 h-10 w-10 text-violet-400 opacity-50" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400 to-transparent opacity-70" />
+              <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-violet-500/10 blur-3xl transition group-hover:bg-fuchsia-500/20" />
 
-              <div className="mb-4 flex">
+              <Quote className="mb-6 h-10 w-10 text-violet-400 opacity-60" />
+
+              <div className="mb-5 flex">
                 {[...Array(5)].map((_, index) => (
                   <Star
                     key={index}
@@ -138,7 +145,7 @@ export default function TestimonialsPage() {
                 ))}
               </div>
 
-              <p className="leading-relaxed text-zinc-300">
+              <p className="relative z-10 min-h-28 leading-relaxed text-zinc-300">
                 {testimonial.review}
               </p>
 
@@ -146,18 +153,14 @@ export default function TestimonialsPage() {
                 <img
                   src={testimonial.image}
                   alt={testimonial.name}
-                  className="h-14 w-14 rounded-full object-cover"
+                  className="h-14 w-14 rounded-full border border-white/10 object-cover"
                 />
 
                 <div>
-                  <h4 className="font-semibold">
+                  <h4 className="font-semibold text-white">
                     {testimonial.name}
                   </h4>
-
-                  <p className="text-sm text-zinc-500">
-                    {testimonial.role}
-                  </p>
-
+                  <p className="text-sm text-zinc-500">{testimonial.role}</p>
                   <p className="text-sm text-violet-400">
                     {testimonial.company}
                   </p>
@@ -167,37 +170,34 @@ export default function TestimonialsPage() {
           ))}
         </div>
 
-        {/* Featured Quote */}
-        <div className="mt-24 rounded-3xl border border-violet-500/20 bg-gradient-to-r from-violet-600/10 to-fuchsia-600/10 p-12 text-center">
-          <Quote className="mx-auto h-12 w-12 text-violet-400" />
+        <div className="mt-28 overflow-hidden rounded-[2rem] border border-violet-500/20 bg-gradient-to-br from-violet-600/20 via-zinc-950/80 to-fuchsia-600/20 p-10 text-center shadow-2xl shadow-violet-950/30 backdrop-blur-2xl md:p-14">
+          <Quote className="mx-auto h-14 w-14 text-violet-300" />
 
-          <h2 className="mx-auto mt-6 max-w-4xl text-3xl font-bold leading-relaxed md:text-4xl">
-            ReelForge transformed our content workflow. What used to take
-            days now takes minutes.
+          <h2 className="mx-auto mt-6 max-w-4xl text-3xl font-black leading-tight md:text-5xl">
+            ReelForge transformed our content workflow. What used to take days
+            now takes minutes.
           </h2>
 
           <p className="mt-6 text-zinc-400">
-            — Trusted by creators worldwide
+            Trusted by creators, marketers, agencies, and podcast teams.
           </p>
         </div>
 
-        {/* CTA */}
-        <div className="mt-20 text-center">
-          <h2 className="text-4xl font-bold">
-            Ready To Create More Content?
+        <div className="mt-24 text-center">
+          <h2 className="text-4xl font-black md:text-5xl">
+            Ready to create more content?
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-zinc-400">
-            Join thousands of creators using ReelForge to turn long-form
-            content into viral clips, captions, and social media assets.
+          <p className="mx-auto mt-5 max-w-2xl text-zinc-400">
+            Start turning podcasts, interviews, webinars, and long-form videos
+            into scroll-stopping short clips.
           </p>
 
-          <button className="mt-8 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-4 font-semibold transition-all hover:scale-105">
+          <button className="mt-8 rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-4 font-semibold shadow-2xl shadow-violet-950/40 transition-all hover:scale-105 hover:from-violet-500 hover:to-fuchsia-500">
             Start Creating Today
           </button>
         </div>
-
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

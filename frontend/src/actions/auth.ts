@@ -2,7 +2,6 @@
 
 import { hashPassword } from "~/lib/auth";
 import { signupSchema, type SignupFormValues } from "~/schemas/auth";
-import { db } from "~/server/db";
 
 type SignupResult = {
   success: boolean;
@@ -21,6 +20,8 @@ export async function signUp(data: SignupFormValues): Promise<SignupResult> {
   const { email, password } = validationResult.data;
 
   try {
+    const { db } = await import("~/server/db");
+
     const existingUser = await db.user.findUnique({ where: { email } });
 
     if (existingUser) {

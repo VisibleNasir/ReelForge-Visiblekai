@@ -2,8 +2,6 @@
 
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { auth } from "~/server/auth";
-import { db } from "~/server/db";
 import { env } from "~/env";
 import { revalidatePath } from "next/cache";
 
@@ -11,6 +9,9 @@ export async function getSubtitleUrl(
   uploadedFileId: string,   
   type: "srt" | "vtt"
 ) {
+  const { auth } = await import("~/server/auth");
+  const { db } = await import("~/server/db");
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };
@@ -59,6 +60,9 @@ export async function getSubtitleUrl(
 }
 
 export async function burnSubtitles(uploadedFileId: string) {
+  const { auth } = await import("~/server/auth");
+  const { db } = await import("~/server/db");
+
   const session = await auth();
   if (!session?.user?.id) {
     return { success: false, error: "Unauthorized" };

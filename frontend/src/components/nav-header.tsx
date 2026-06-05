@@ -1,114 +1,138 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { useState } from "react";
 import { signOut } from "next-auth/react";
+
+import {
+  Navbar,
+  NavBody,
+  NavItems,
+  MobileNav,
+  NavbarButton,
+  MobileNavHeader,
+  MobileNavToggle,
+  MobileNavMenu,
+} from "./ui/resizable-navbar";
+
+import { Badge } from "./ui/badge";
 import { ModeToggle } from "./ui/mode-toggle";
 
 const NavHeader = ({ credits, email }: { credits: number; email: string }) => {
-  const [isMounted, setIsMounted] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const navItems = [
+    {
+      name: "Dashboard",
+      link: "/user/dashboard",
+    },
+    {
+      name: "Upload",
+      link: "/user/upload",
+    },
+    {
+      name: "Clips",
+      link: "/user/clips",
+    },
+    {
+      name: "Billing",
+      link: "/billing",
+    },
+  ];
 
-  // Agar component client pe nahi mounted hai to simple fallback render karo
-  if (!isMounted) {
-    return (
-      <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/80">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+  return (
+    <div className="relative z-50 w-full">
+      <Navbar>
+        {/* Desktop Navigation */}
+        <NavBody className="h-20 px-8">
           <Link
             href="/"
-            className="flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
+            className="flex items-center gap-2 text-lg font-bold tracking-tight text-neutral-900 dark:text-white"
           >
             ReelForge
           </Link>
-        </div>
-      </header>
-    );
-  }
 
-  return (
-    <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/80">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-100"
-        >
-          ReelForge
-        </Link>
+          <NavItems items={navItems} />
 
-        <div className="flex items-center gap-4">
-          <Badge variant="secondary" className="px-3 py-1 text-sm">
-            Credits: {credits}
-          </Badge>
-
-          <div className="flex items-center">
-            <ModeToggle />
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="h-10 w-10 rounded-full border border-zinc-200 bg-white p-0 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:bg-zinc-800"
-              >
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="bg-zinc-900 text-sm font-medium text-white dark:bg-white dark:text-zinc-900">
-                    {email.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent
-              align="end"
-              className="w-64 rounded-xl border border-zinc-200 bg-white p-3 shadow-lg dark:border-zinc-800 dark:bg-zinc-950"
+          <div className="flex items-center gap-3">
+            <Badge
+              variant="secondary"
+              className="rounded-full px-4 py-2 text-sm"
             >
-              <DropdownMenuLabel className="px-2 py-1.5">
-                <p className="text-xs text-zinc-500">Signed in as</p>
-                <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+              Credits: {credits}
+            </Badge>
+
+            <ModeToggle />
+
+            <NavbarButton variant="secondary">
+              {email.charAt(0).toUpperCase()}
+            </NavbarButton>
+
+            <NavbarButton
+              variant="primary"
+              onClick={() => signOut({ redirectTo: "/login" })}
+            >
+              Sign out
+            </NavbarButton>
+          </div>
+        </NavBody>
+
+        {/* Mobile Navigation */}
+        <MobileNav>
+          <MobileNavHeader>
+            <Link
+              href="/"
+              className="text-lg font-bold tracking-tight text-neutral-900 dark:text-white"
+            >
+              ReelForge
+            </Link>
+
+            <MobileNavToggle
+              isOpen={isMobileMenuOpen}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            />
+          </MobileNavHeader>
+
+          <MobileNavMenu
+            isOpen={isMobileMenuOpen}
+            onClose={() => setIsMobileMenuOpen(false)}
+          >
+            {navItems.map((item, idx) => (
+              <Link
+                key={`mobile-link-${idx}`}
+                href={item.link}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="relative text-neutral-600 dark:text-neutral-300"
+              >
+                <span className="block">{item.name}</span>
+              </Link>
+            ))}
+
+            <div className="flex w-full flex-col gap-4 pt-4">
+              <div className="rounded-xl border border-neutral-200 p-4 text-sm dark:border-neutral-800">
+                <p className="text-neutral-500">Signed in as</p>
+                <p className="truncate font-medium text-neutral-900 dark:text-white">
                   {email}
                 </p>
-              </DropdownMenuLabel>
+                <p className="mt-2 text-neutral-500">Credits: {credits}</p>
+              </div>
 
-              <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
-
-              <DropdownMenuItem className="text-sm">
-                Add credits via UPI:
-                <span className="ml-1 font-mono text-xs">7822952595@ibl</span>
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
-
-              <DropdownMenuItem asChild className="cursor-pointer rounded-md text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+              <NavbarButton variant="secondary" className="w-full">
                 <Link href="/billing">Billing</Link>
-              </DropdownMenuItem>
+              </NavbarButton>
 
-              <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
-
-              <DropdownMenuItem
+              <NavbarButton
+                variant="primary"
+                className="w-full"
                 onClick={() => signOut({ redirectTo: "/login" })}
-                className="cursor-pointer rounded-md text-sm text-red-600 hover:bg-red-50 focus:text-red-600 dark:hover:bg-red-950"
               >
                 Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    </header>
+              </NavbarButton>
+            </div>
+          </MobileNavMenu>
+        </MobileNav>
+      </Navbar>
+    </div>
   );
 };
 

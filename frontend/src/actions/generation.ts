@@ -4,10 +4,10 @@ import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { revalidatePath } from "next/cache";
 import { env } from "~/env";
-import { auth } from "~/server/auth";
-import { db } from "~/server/db";
 
 export async function processVideo(uploadedFileId: string) {
+  const { db } = await import("~/server/db");
+
   const uploadedVideo = await db.uploadedFile.findUnique({
     where: {
       id: uploadedFileId,
@@ -134,6 +134,9 @@ export async function processVideo(uploadedFileId: string) {
 export async function getClipPlayUrl(
   clipId: string,
 ): Promise<{ succes: boolean; url?: string; error?: string }> {
+  const { auth } = await import("~/server/auth");
+  const { db } = await import("~/server/db");
+
   const session = await auth();
   if (!session?.user?.id) {
     return { succes: false, error: "Unauthorized" };
