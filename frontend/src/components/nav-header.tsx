@@ -1,64 +1,72 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { signOut } from "next-auth/react";
-
-import {
-  Navbar,
-  NavBody,
-  NavItems,
-  MobileNav,
-  NavbarButton,
-  MobileNavHeader,
-  MobileNavToggle,
-  MobileNavMenu,
-} from "./ui/resizable-navbar";
-
+import StaggeredMenu from "~/components/StaggeredMenu";
 import { Badge } from "./ui/badge";
 import { ModeToggle } from "./ui/mode-toggle";
+import { NavbarButton } from "./ui/resizable-navbar";
 
 const NavHeader = ({ credits, email }: { credits: number; email: string }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const navItems = [
+  const menuItems = [
     {
-      name: "Dashboard",
-      link: "/user/dashboard",
+      label: "Upload Link",
+      ariaLabel: "Go to dashboard",
+      link: "/user/dashboard/youtube",
     },
     {
-      name: "Upload",
-      link: "/user/upload",
+      label: "Upload Video",
+      ariaLabel: "Upload video",
+      link: "/user/dashboard/upload",
     },
     {
-      name: "Clips",
-      link: "/user/clips",
+      label: "Burn Subtitles",
+      ariaLabel: "Burn subtitles",
+      link: "/user/dashboard/subtitles",
     },
     {
-      name: "Billing",
+      label: "My Clips",
+      ariaLabel: "View my clips",
+      link: "/user/dashboard/clips",
+    },
+    {
+      label: "Content Studio",
+      ariaLabel: "Go to content studio",
+      link: "/user/dashboard/content",
+    },
+    {
+      label: "Billing",
+      ariaLabel: "Go to billing",
       link: "/billing",
     },
   ];
 
+  const socialItems = [
+    {
+      label: "GitHub",
+      link: "#",
+    },
+    {
+      label: "LinkedIn",
+      link: "#",
+    },
+    {
+      label: "Support",
+      link: "mailto:support@reelforge.com",
+    },
+  ];
+
   return (
-    <div className="relative z-50 w-full">
-      <Navbar>
-        {/* Desktop Navigation */}
-        <NavBody className="h-20 px-8">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-lg font-bold tracking-tight text-neutral-900 dark:text-white"
-          >
+    <>
+      {/* Top Navbar Info */}
+      <header className="fixed left-0 top-0 z-[60] w-full border-b border-zinc-800 bg-black/50 backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+          <Link href="/" className="text-xl font-bold text-white">
             ReelForge
           </Link>
 
-          <NavItems items={navItems} />
-
           <div className="flex items-center gap-3">
-            <Badge
-              variant="secondary"
-              className="rounded-full px-4 py-2 text-sm"
-            >
+            <Badge variant="secondary" className="rounded-full px-4 py-2 text-sm">
               Credits: {credits}
             </Badge>
 
@@ -68,71 +76,30 @@ const NavHeader = ({ credits, email }: { credits: number; email: string }) => {
               {email.charAt(0).toUpperCase()}
             </NavbarButton>
 
-            <NavbarButton
-              variant="primary"
-              onClick={() => signOut({ redirectTo: "/login" })}
-            >
+            <NavbarButton variant="primary" onClick={() => signOut({ redirectTo: "/login" })}>
               Sign out
             </NavbarButton>
           </div>
-        </NavBody>
+        </div>
+      </header>
 
-        {/* Mobile Navigation */}
-        <MobileNav>
-          <MobileNavHeader>
-            <Link
-              href="/"
-              className="text-lg font-bold tracking-tight text-neutral-900 dark:text-white"
-            >
-              ReelForge
-            </Link>
-
-            <MobileNavToggle
-              isOpen={isMobileMenuOpen}
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            />
-          </MobileNavHeader>
-
-          <MobileNavMenu
-            isOpen={isMobileMenuOpen}
-            onClose={() => setIsMobileMenuOpen(false)}
-          >
-            {navItems.map((item, idx) => (
-              <Link
-                key={`mobile-link-${idx}`}
-                href={item.link}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="relative text-neutral-600 dark:text-neutral-300"
-              >
-                <span className="block">{item.name}</span>
-              </Link>
-            ))}
-
-            <div className="flex w-full flex-col gap-4 pt-4">
-              <div className="rounded-xl border border-neutral-200 p-4 text-sm dark:border-neutral-800">
-                <p className="text-neutral-500">Signed in as</p>
-                <p className="truncate font-medium text-neutral-900 dark:text-white">
-                  {email}
-                </p>
-                <p className="mt-2 text-neutral-500">Credits: {credits}</p>
-              </div>
-
-              <NavbarButton variant="secondary" className="w-full">
-                <Link href="/billing">Billing</Link>
-              </NavbarButton>
-
-              <NavbarButton
-                variant="primary"
-                className="w-full"
-                onClick={() => signOut({ redirectTo: "/login" })}
-              >
-                Sign out
-              </NavbarButton>
-            </div>
-          </MobileNavMenu>
-        </MobileNav>
-      </Navbar>
-    </div>
+      {/* Animated Staggered Menu */}
+      <div className="fixed right-6 top-0 z-[70] h-20 w-[120px] pointer-events-none">
+        <StaggeredMenu
+          position="right"
+          items={menuItems}
+          socialItems={socialItems}
+          displaySocials
+          displayItemNumbering={true}
+          menuButtonColor="#ffffff"
+          openMenuButtonColor="#ffffff"
+          changeMenuColorOnOpen={true}
+          colors={["#09090b", "#18181b", "#5227FF"]}
+          accentColor="#8b5cf6"
+          isFixed={true}
+        />    
+      </div>
+    </>
   );
 };
 

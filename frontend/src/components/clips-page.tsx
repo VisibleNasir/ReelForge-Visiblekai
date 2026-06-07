@@ -2,7 +2,6 @@
 
 import { Sparkles, Video } from "lucide-react";
 import GradientBlinds from "./GradientBlinds";
-import { DashboardLayout } from "./dashboard-layout";
 import { ClipDisplay } from "./clip-display";
 import { HeroVideoDialog } from "./ui/hero-video-dialog";
 interface Clip {
@@ -11,7 +10,6 @@ interface Clip {
 
 export function ClipsPage({ clips }: { clips: Clip[] }) {
   return (
-    <DashboardLayout>
       <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden rounded-3xl bg-black text-white">
         <div className="absolute inset-0">
           <GradientBlinds
@@ -102,6 +100,5 @@ export function ClipsPage({ clips }: { clips: Clip[] }) {
           </div>
         </div>
       </section>
-    </DashboardLayout>
   );
 }

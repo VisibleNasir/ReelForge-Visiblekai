@@ -139,7 +139,6 @@ export function UploadVideoPage({
   };
 
   return (
-    <DashboardLayout>
       <Card className="border-0 bg-zinc-900/70 backdrop-blur-2xl">
         <CardHeader className="pb-8">
           <CardTitle className="text-3xl">Create Viral Clips</CardTitle>
@@ -243,6 +242,5 @@ export function UploadVideoPage({
           )}
         </CardContent>
       </Card>
-    </DashboardLayout>
   );
 }
