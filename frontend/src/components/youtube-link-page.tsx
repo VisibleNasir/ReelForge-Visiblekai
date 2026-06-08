@@ -60,7 +60,6 @@ export function YouTubeLinkPage() {
   };
 
   return (
-    <DashboardLayout>
       <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden rounded-3xl border border-zinc-800 bg-black">
         <div className="absolute inset-0">
           <DotGrid
@@ -187,6 +186,5 @@ export function YouTubeLinkPage() {
           </div>
         </div>
       </section>
-    </DashboardLayout>
   );
 }

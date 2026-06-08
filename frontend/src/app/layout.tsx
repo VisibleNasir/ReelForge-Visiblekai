@@ -4,6 +4,7 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Providers } from "~/components/providers";
 import { SessionProvider } from "next-auth/react";
+import Footer from "~/components/footer";
 
 export const metadata: Metadata = {
   title: "ReelForge - Podcast Clipper",
@@ -33,6 +34,8 @@ export default function RootLayout({
           <Providers>{children}</Providers>
         </SessionProvider>
       </body>
+    {/* Footer */}
+        <Footer />
     </html>
   );
 }

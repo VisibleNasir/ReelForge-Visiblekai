@@ -136,7 +136,6 @@ export function ContentStudioPage() {
   };
 
   return (
-    <DashboardLayout>
       <section className="relative min-h-screen overflow-hidden rounded-3xl bg-black text-white">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute left-1/2 top-0 h-[500px] w-[900px] -translate-x-1/2 rounded-full bg-violet-600/20 blur-[120px]" />
@@ -385,6 +384,5 @@ export function ContentStudioPage() {
           )}
         </div>
       </section>
-    </DashboardLayout>
   );
 }

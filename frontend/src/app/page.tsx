@@ -133,12 +133,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-800 py-12 bg-zinc-950 relative z-10">
-        <div className="max-w-6xl mx-auto px-6 text-center text-zinc-500 text-sm">
-          © 2026 ReelForge • Built for creators who want to focus on talking, not editing.
-        </div>
-      </footer>
     </div>
   );
 }
